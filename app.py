@@ -333,12 +333,29 @@ def fetch_all(ids, start, end):
         """,
     }
 
-    # Run all 12 queries in parallel (each on its own connection)
+    # Run queries — parallel locally, sequential on Railway (fewer connections)
+    import os
     results = {}
-    with ThreadPoolExecutor(max_workers=12) as pool:
-        futures = {pool.submit(q, sql): name for name, sql in sqls.items()}
-        for future in as_completed(futures):
-            results[futures[future]] = future.result()
+    if os.environ.get("RAILWAY_ENVIRONMENT"):
+        # Sequential on Railway to avoid connection pool issues
+        conn = get_connection()
+        for name, sql in sqls.items():
+            try:
+                results[name] = pd.read_sql(sql, conn)
+            except Exception as e:
+                print(f"Query error [{name}]: {e}")
+                results[name] = pd.DataFrame()
+        conn.close()
+    else:
+        # Parallel locally for speed
+        with ThreadPoolExecutor(max_workers=12) as pool:
+            futures = {pool.submit(q, sql): name for name, sql in sqls.items()}
+            for future in as_completed(futures):
+                try:
+                    results[futures[future]] = future.result()
+                except Exception as e:
+                    print(f"Query error: {e}")
+                    results[futures[future]] = pd.DataFrame()
 
     return results
 
@@ -1219,10 +1236,15 @@ def api_data():
     if not ids:
         return jsonify({"error": "No WM users selected"})
 
-    dfs = fetch_all(ids, start, end)
-    result = build_response(dfs, wm_users, name_map)
-    set_cached(cache_key, result)
-    return jsonify(result)
+    try:
+        dfs = fetch_all(ids, start, end)
+        result = build_response(dfs, wm_users, name_map)
+        set_cached(cache_key, result)
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
