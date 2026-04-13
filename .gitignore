@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.json
+wm_dashboard.html
+wm_static_template.html
+wm_dashboard_template.html
+investor_hub_dashboard.html

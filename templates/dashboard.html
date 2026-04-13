@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WM Performance Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+header{background:linear-gradient(135deg,#1a1f2e,#141824);border-bottom:1px solid #2d3748;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-badge{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff}
+header h1{font-size:20px;font-weight:700;color:#f1f5f9}
+header p{font-size:11px;color:#94a3b8;margin-top:2px}
+.filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filters label{font-size:11px;color:#94a3b8}
+.filters input[type=date],.filters select{background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
+.filters select{min-width:170px}
+.filters select option{background:#1e2534;color:#e2e8f0}
+.btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.85}
+#loading{position:fixed;inset:0;background:rgba(15,17,23,.8);display:none;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:12px}
+.spinner{width:44px;height:44px;border:4px solid #2d3748;border-top-color:#6366f1;border-radius:50%;animation:spin .8s linear infinite}
+.load-text{color:#94a3b8;font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+main{padding:20px 24px;flex:1;min-width:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:28px}
+.kc{background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
+.kc:hover{border-color:#6366f1}
+.kc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.kc:nth-child(1)::before{background:#6366f1}.kc:nth-child(2)::before{background:#f59e0b}
+.kc:nth-child(3)::before{background:#10b981}.kc:nth-child(4)::before{background:#3b82f6}
+.kc:nth-child(5)::before{background:#ec4899}.kc:nth-child(6)::before{background:#14b8a6}
+.kc:nth-child(7)::before{background:#a855f7}.kc:nth-child(8)::before{background:#ef4444}
+.kl{font-size:10px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.kv{font-size:26px;font-weight:700;color:#f1f5f9;line-height:1}
+.sec{margin-bottom:30px}
+.sec-title{font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.sec-title .d{width:8px;height:8px;border-radius:50%}
+.sec-sub{font-size:11px;color:#64748b;margin-bottom:12px}
+.card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:18px;margin-bottom:14px}
+.row2{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:14px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#141824;color:#94a3b8;font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:2px solid #2d3748;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+tbody tr{border-bottom:1px solid #1e2534;transition:background .15s}
+tbody tr:hover{background:#1e2534}
+tbody td{padding:9px 12px;color:#e2e8f0;white-space:nowrap}
+tbody td:first-child{font-weight:600}
+tfoot td{padding:9px 12px;font-weight:700;color:#f1f5f9;border-top:2px solid #2d3748}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.nb{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:#f1f5f9}
+.presales-group{border-left:3px solid #2d3748}
+.kpi-group-header th{text-align:center !important;font-size:11px !important;letter-spacing:1px;padding:8px 12px !important}
+.kpi-act{background:#1a3a2a !important;color:#10b981 !important}
+.kpi-prop{background:#1a2a3a !important;color:#60a5fa !important}
+.kpi-pipe{background:#2a1a2a !important;color:#c084fc !important}
+.kpi-prod{background:#2a2a1a !important;color:#fbbf24 !important}
+.kpi-id{background:#1a1f2e !important}
+.cell-green{background:rgba(16,185,129,.12);color:#10b981}
+.cell-yellow{background:rgba(251,191,36,.12);color:#fbbf24}
+.cell-red{background:rgba(239,68,68,.12);color:#ef4444}
+.wm-profiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px}
+.wm-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:20px;position:relative}
+.wm-card:hover{border-color:#6366f1}
+.wm-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #2d3748}
+.wm-card-header .wm-avatar{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;margin-right:12px;flex-shrink:0}
+.wm-card-header .wm-info{flex:1}
+.wm-card-header .wm-name{font-size:15px;font-weight:700;color:#f1f5f9}
+.wm-card-header .wm-role{font-size:11px;color:#94a3b8}
+.wm-card-header .wm-conv-badge{background:rgba(16,185,129,.12);color:#10b981;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.wm-card-header .wm-conv-badge.zero{background:rgba(148,163,184,.1);color:#64748b}
+.wm-highlights{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.wm-highlight{text-align:center;padding:8px 4px}
+.wm-highlight .hl-value{font-size:20px;font-weight:700;line-height:1.2}
+.wm-highlight .hl-value.green{color:#10b981}.wm-highlight .hl-value.yellow{color:#fbbf24}.wm-highlight .hl-value.blue{color:#60a5fa}
+.wm-highlight .hl-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px}
+.wm-stats{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.wm-stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2534;font-size:12px}
+.wm-stat .stat-label{color:#94a3b8}
+.wm-stat .stat-value{color:#e2e8f0;font-weight:600;font-variant-numeric:tabular-nums}
+.wm-stats-left{padding-right:16px;border-right:1px solid #1e2534}
+.wm-stats-right{padding-left:16px}
+/* Drill-down modal */
+.drill-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.drill-box{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:24px;width:560px;max-width:92vw;max-height:80vh;overflow-y:auto}
+.drill-box .drill-title{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.drill-box .drill-sub{font-size:11px;color:#64748b;margin-bottom:16px}
+.drill-box .drill-close{background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer}
+.drill-box .drill-chart{margin-bottom:16px}
+body.light .drill-box{background:var(--bg-card);border-color:var(--border)}
+
+/* Clickable table cells */
+td.clickable{cursor:pointer;position:relative;transition:color .15s}
+td.clickable:hover{color:#6366f1 !important}
+td.clickable::after{content:'';position:absolute;bottom:2px;left:12px;right:12px;height:1px;background:#6366f144;opacity:0;transition:opacity .15s}
+td.clickable:hover::after{opacity:1}
+
+/* Tooltip */
+.cell-tooltip{position:absolute;background:#1a1f2e;border:1px solid #3a4556;border-radius:8px;padding:10px 14px;font-size:11px;color:#e2e8f0;z-index:300;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:250px;line-height:1.5;opacity:0;transition:opacity .15s}
+.cell-tooltip.visible{opacity:1}
+body.light .cell-tooltip{background:var(--bg-card);border-color:var(--border);color:var(--text)}
+
+/* Summary KPI cards */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.summary-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.summary-card:hover{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,.15)}
+.summary-card{transition:all .2s}
+.summary-card .sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.summary-card .sc-value{font-size:28px;font-weight:700;color:#f1f5f9;line-height:1}
+.summary-card .sc-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.summary-card .sc-delta{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
+.sc-delta.up{background:rgba(16,185,129,.12);color:#10b981}
+.sc-delta.down{background:rgba(239,68,68,.12);color:#ef4444}
+.sc-delta.neutral{background:rgba(148,163,184,.1);color:#94a3b8}
+.summary-card .sc-chart{margin-top:8px}
+.summary-card .sc-bars{display:flex;align-items:flex-end;gap:3px;height:36px}
+.summary-card .sc-bar{flex:1;border-radius:3px 3px 0 0;min-width:0;position:relative}
+.summary-card .sc-bar-label{font-size:8px;color:#64748b;text-align:center;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary-card .sc-donut{display:flex;align-items:center;gap:10px}
+.summary-card .sc-legend{font-size:10px;color:#94a3b8;line-height:1.6}
+.summary-card .sc-legend-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
+.summary-card .sc-progress{margin-top:6px}
+.summary-card .sc-prog-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;color:#94a3b8}
+.summary-card .sc-prog-name{width:60px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary-card .sc-prog-bar{flex:1;height:6px;background:#1e2534;border-radius:3px;overflow:hidden}
+.summary-card .sc-prog-fill{height:100%;border-radius:3px}
+.summary-card .sc-prog-val{width:24px;font-weight:600;color:#e2e8f0}
+body.light .summary-card{background:var(--bg-card);border-color:var(--border)}
+
+/* Sparklines */
+.sparkline{display:inline-block;vertical-align:middle;margin-left:0}
+.sparkline svg{display:block}
+th:has(+ th),td:has(+ td){} /* fallback */
+[class=""],.spark-col{width:50px !important;max-width:50px;padding:4px 2px !important}
+
+/* Export buttons */
+.export-bar{display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px}
+.export-btn{background:#1e2534;border:1px solid #3a4556;color:#94a3b8;border-radius:6px;padding:5px 12px;font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px}
+.export-btn:hover{color:#e2e8f0;border-color:#6366f1}
+body.light .export-btn{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
+
+/* Weekly digest */
+.digest-bar{background:linear-gradient(135deg,#1a1f2e,#141824);border:1px solid #2d3748;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:12px;color:#e2e8f0;line-height:1.5;overflow:hidden}
+.digest-bar .digest-icon{font-size:18px;flex-shrink:0}
+.digest-bar .digest-text span{font-weight:700;color:#f1f5f9}
+.digest-bar .digest-highlight{color:#10b981;font-weight:700}
+body.light .digest-bar{background:var(--bg-card);border-color:var(--border)}
+
+/* Collapsible sidebar */
+.sidebar{transition:width .3s ease}
+.sidebar.collapsed{width:52px;padding:14px 4px}
+.sidebar.collapsed .sidebar-title{display:none}
+.sidebar.collapsed .sidebar-wm span{display:none}
+.sidebar.collapsed .sidebar-wm{justify-content:center;padding:6px}
+.sidebar.collapsed .sidebar-avatar{width:32px;height:32px;font-size:12px}
+.sidebar-toggle{width:100%;background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:6px;padding:6px;font-size:14px;cursor:pointer;margin-bottom:10px;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.sidebar-toggle:hover{background:#1e2534;color:#e2e8f0}
+
+/* Number animation */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kv.animated{animation:fadeInUp .5s ease-out}
+.count-up{transition:all .3s ease}
+
+/* Sticky table headers */
+.tw table thead{position:sticky;top:0;z-index:5}
+
+/* Row hover with color hint */
+tbody tr{transition:background .15s,box-shadow .15s}
+tbody tr:hover{box-shadow:inset 3px 0 0 #6366f1}
+
+/* App layout — sidebar + main */
+.app-layout{display:flex;min-height:calc(100vh - 120px)}
+.sidebar{width:200px;background:#141824;border-right:1px solid #2d3748;padding:14px 10px;flex-shrink:0;position:sticky;top:100px;height:fit-content;max-height:calc(100vh - 120px);overflow-y:auto}
+.sidebar-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:600;margin-bottom:10px;padding:0 6px}
+.sidebar-wm{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;cursor:pointer;font-size:12px;color:#94a3b8;transition:all .15s;margin-bottom:2px}
+.sidebar-wm:hover{background:#1e2534;color:#e2e8f0}
+.sidebar-wm.active{background:rgba(99,102,241,.12);color:#f1f5f9;font-weight:600}
+.sidebar-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.main-content{flex:1;min-width:0}
+
+/* Notifications */
+.notif-btn{position:relative}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.notif-panel{position:fixed;top:56px;right:16px;width:340px;max-height:400px;background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:200;overflow:hidden}
+.notif-header{padding:14px 16px;font-size:13px;font-weight:700;color:#f1f5f9;border-bottom:1px solid #2d3748}
+.notif-list{max-height:340px;overflow-y:auto;padding:8px}
+.notif-item{padding:10px 12px;border-radius:8px;margin-bottom:4px;font-size:12px;border-left:3px solid transparent}
+.notif-item:hover{background:#1e2534}
+.notif-item.deal{border-left-color:#10b981}
+.notif-item.proposal{border-left-color:#6366f1}
+.notif-item.alert{border-left-color:#f59e0b}
+.notif-item .notif-time{font-size:10px;color:#64748b;margin-top:4px}
+.notif-item .notif-text{color:#e2e8f0}
+
+/* Import modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-box{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:24px;width:420px;max-width:90vw}
+.modal-title{font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:16px}
+.modal-body{color:#e2e8f0}
+
+/* Edit mode */
+body.edit-mode [data-editable]{outline:2px dashed #6366f166;outline-offset:2px;cursor:text;border-radius:4px}
+body.edit-mode [data-editable]:hover{outline-color:#6366f1;background:rgba(99,102,241,.05)}
+body.edit-mode [data-editable]:focus{outline-color:#6366f1;background:rgba(99,102,241,.1)}
+.edit-indicator{position:fixed;bottom:20px;right:20px;background:#6366f1;color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;display:none;box-shadow:0 4px 16px rgba(99,102,241,.4)}
+
+/* Light mode sidebar */
+body.light .sidebar{background:var(--bg-secondary);border-color:var(--border)}
+body.light .sidebar-wm{color:var(--text-muted)}
+body.light .sidebar-wm:hover{background:var(--table-hover);color:var(--text)}
+body.light .sidebar-wm.active{background:rgba(99,102,241,.1);color:var(--text-heading)}
+body.light .notif-panel{background:var(--bg-card);border-color:var(--border)}
+body.light .modal-box{background:var(--bg-card);border-color:var(--border)}
+
+/* Pipeline */
+.pipeline-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pip-chip{border-radius:20px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid #2d3748;background:#1a1f2e;color:#94a3b8;transition:all .2s;display:flex;align-items:center;gap:8px}
+.pip-chip:hover{border-color:#4a5568;color:#e2e8f0}
+.pip-chip.active{border-color:#6366f1;background:rgba(99,102,241,.1);color:#f1f5f9}
+.pip-chip .chip-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.pip-chip .chip-info{font-size:11px;color:#64748b}
+.stage-filters{display:flex;gap:4px;flex-wrap:wrap}
+.stage-btn{border-radius:6px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid #2d3748;background:#1a1f2e;color:#94a3b8;transition:all .2s}
+.stage-btn:hover{color:#e2e8f0}
+.stage-btn.active{color:#fff;border-color:transparent}
+.stage-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.note-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:16px;margin-bottom:10px}
+.note-card:hover{border-color:#4a5568}
+.note-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.note-header .note-avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.note-header .note-name{font-size:13px;font-weight:600;color:#f1f5f9}
+.note-header .note-date{font-size:11px;color:#64748b;margin-left:auto}
+.note-title{font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:4px}
+.note-body{font-size:12px;color:#e2e8f0;line-height:1.5;max-height:100px;overflow:hidden;position:relative}
+.note-body.expanded{max-height:none}
+.note-toggle{font-size:11px;color:#6366f1;cursor:pointer;margin-top:4px}
+.ageing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.ageing-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px 16px;position:relative}
+.ageing-card:hover{border-color:#4a5568}
+.ageing-card .ac-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ageing-card .ac-avatar{width:32px;height:32px;border-radius:8px;background:#2d3748;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#94a3b8}
+.ageing-card .ac-name{font-size:13px;font-weight:700;color:#f1f5f9}
+.ageing-card .ac-stats{display:flex;gap:8px}
+.ageing-card .ac-stat{flex:1;border-radius:6px;padding:8px 10px;text-align:center}
+.ageing-card .ac-stat .stat-val{font-size:16px;font-weight:700;line-height:1.3}
+.ageing-card .ac-stat .stat-lbl{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px}
+.ac-stat.pending-bg{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2)}
+.ac-stat.pending-bg .stat-val{color:#fbbf24}
+.ac-stat.inactive-bg{background:rgba(148,163,184,.06);border:1px solid rgba(148,163,184,.15)}
+.ac-stat.inactive-bg .stat-val{color:#94a3b8}
+.ac-stat.danger-bg{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+.ac-stat.danger-bg .stat-val{color:#ef4444}
+.ac-stat.ok-bg{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+.ac-stat.ok-bg .stat-val{color:#10b981}
+.kv{animation:countUp .6s ease-out}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.progress-bar{height:6px;background:#1e2534;border-radius:3px;margin-top:6px;overflow:hidden}
+.progress-bar .fill{height:100%;border-radius:3px;transition:width .8s ease}
+.task-mix-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:16px}
+.top-tabs{display:flex;gap:5px;margin-bottom:0;justify-content:flex-start}
+.top-tab{background:#1a1f2e;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.top-tab:hover{color:#e2e8f0;border-color:#4a5568}
+.top-tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-color:transparent}
+.top-tab-content{display:none}
+.top-tab-content.active{display:block}
+.date-presets{display:flex;gap:4px}
+.preset{background:#1e2534;border:1px solid #3a4556;color:#94a3b8;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+.preset:hover{color:#e2e8f0;border-color:#4a5568}
+.preset.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-color:transparent}
+.collapsible{cursor:pointer;user-select:none;transition:opacity .2s}
+.collapsible:hover{opacity:.8}
+.collapse-icon{font-size:12px;margin-left:8px;transition:transform .2s;display:inline-block}
+.collapse-icon.open{transform:rotate(90deg)}
+.collapse-body{transition:all .3s ease}
+/* Theme controls */
+.theme-controls{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.theme-btn{width:36px;height:36px;border-radius:8px;background:#1e2534;border:1px solid #3a4556;color:#f1f5f9;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-btn:hover{border-color:#6366f1;background:#2d3748}
+.theme-select{background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 10px;font-size:11px;outline:none;cursor:pointer}
+.theme-select option{background:#1e2534;color:#e2e8f0}
+
+/* Color themes */
+body.theme-ocean{--accent:#0ea5e9;--accent-dark:#0369a1;--accent-glow:rgba(14,165,233,.15)}
+body.theme-ocean header{background:linear-gradient(135deg,#0c1929,#0f2235)}
+body.theme-ocean .top-tab.active,.theme-ocean .preset.active,.theme-ocean .btn,.theme-ocean .logo-badge{background:linear-gradient(135deg,#0ea5e9,#0284c7) !important;border-color:transparent !important}
+body.theme-ocean .kc:nth-child(1)::before,.theme-ocean .kc:nth-child(2)::before,.theme-ocean .kc:nth-child(3)::before,.theme-ocean .kc:nth-child(4)::before,.theme-ocean .kc:nth-child(5)::before,.theme-ocean .kc:nth-child(6)::before,.theme-ocean .kc:nth-child(7)::before{background:#0ea5e9}
+body.theme-ocean .kc:hover{border-color:#0ea5e9}
+
+body.theme-forest{--accent:#10b981;--accent-dark:#047857}
+body.theme-forest header{background:linear-gradient(135deg,#0a1f16,#0f291e)}
+body.theme-forest .top-tab.active,.theme-forest .preset.active,.theme-forest .btn,.theme-forest .logo-badge{background:linear-gradient(135deg,#10b981,#059669) !important;border-color:transparent !important}
+body.theme-forest .kc:nth-child(1)::before,.theme-forest .kc:nth-child(2)::before,.theme-forest .kc:nth-child(3)::before,.theme-forest .kc:nth-child(4)::before,.theme-forest .kc:nth-child(5)::before,.theme-forest .kc:nth-child(6)::before,.theme-forest .kc:nth-child(7)::before{background:#10b981}
+body.theme-forest .kc:hover{border-color:#10b981}
+
+body.theme-sunset{--accent:#f59e0b;--accent-dark:#b45309}
+body.theme-sunset header{background:linear-gradient(135deg,#1f1508,#291a0a)}
+body.theme-sunset .top-tab.active,.theme-sunset .preset.active,.theme-sunset .btn,.theme-sunset .logo-badge{background:linear-gradient(135deg,#f59e0b,#d97706) !important;border-color:transparent !important;color:#000 !important}
+body.theme-sunset .kc:nth-child(1)::before,.theme-sunset .kc:nth-child(2)::before,.theme-sunset .kc:nth-child(3)::before,.theme-sunset .kc:nth-child(4)::before,.theme-sunset .kc:nth-child(5)::before,.theme-sunset .kc:nth-child(6)::before,.theme-sunset .kc:nth-child(7)::before{background:#f59e0b}
+body.theme-sunset .kc:hover{border-color:#f59e0b}
+
+body.theme-royal{--accent:#8b5cf6;--accent-dark:#6d28d9}
+body.theme-royal header{background:linear-gradient(135deg,#1a0f2e,#1f1338)}
+body.theme-royal .top-tab.active,.theme-royal .preset.active,.theme-royal .btn,.theme-royal .logo-badge{background:linear-gradient(135deg,#8b5cf6,#7c3aed) !important;border-color:transparent !important}
+body.theme-royal .kc:nth-child(1)::before,.theme-royal .kc:nth-child(2)::before,.theme-royal .kc:nth-child(3)::before,.theme-royal .kc:nth-child(4)::before,.theme-royal .kc:nth-child(5)::before,.theme-royal .kc:nth-child(6)::before,.theme-royal .kc:nth-child(7)::before{background:#8b5cf6}
+body.theme-royal .kc:hover{border-color:#8b5cf6}
+
+body.theme-rose{--accent:#ec4899;--accent-dark:#be185d}
+body.theme-rose header{background:linear-gradient(135deg,#1f0a18,#29101f)}
+body.theme-rose .top-tab.active,.theme-rose .preset.active,.theme-rose .btn,.theme-rose .logo-badge{background:linear-gradient(135deg,#ec4899,#db2777) !important;border-color:transparent !important}
+body.theme-rose .kc:nth-child(1)::before,.theme-rose .kc:nth-child(2)::before,.theme-rose .kc:nth-child(3)::before,.theme-rose .kc:nth-child(4)::before,.theme-rose .kc:nth-child(5)::before,.theme-rose .kc:nth-child(6)::before,.theme-rose .kc:nth-child(7)::before{background:#ec4899}
+body.theme-rose .kc:hover{border-color:#ec4899}
+
+body.theme-slate{--accent:#64748b;--accent-dark:#475569}
+body.theme-slate header{background:linear-gradient(135deg,#1e2028,#1a1c24)}
+body.theme-slate .top-tab.active,.theme-slate .preset.active,.theme-slate .btn,.theme-slate .logo-badge{background:linear-gradient(135deg,#64748b,#475569) !important;border-color:transparent !important}
+body.theme-slate .kc:nth-child(1)::before,.theme-slate .kc:nth-child(2)::before,.theme-slate .kc:nth-child(3)::before,.theme-slate .kc:nth-child(4)::before,.theme-slate .kc:nth-child(5)::before,.theme-slate .kc:nth-child(6)::before,.theme-slate .kc:nth-child(7)::before{background:#64748b}
+body.theme-slate .kc:hover{border-color:#64748b}
+
+/* Filter strip */
+.filter-strip{background:var(--bg-secondary,#141824);border-bottom:1px solid var(--border,#2d3748);padding:10px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:60px;z-index:99}
+.filter-inputs{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-inputs label{font-size:11px;color:var(--text-muted,#94a3b8)}
+.filter-inputs input[type=date],.filter-inputs select{background:var(--bg-card,#1e2534);border:1px solid var(--border,#3a4556);color:var(--text,#e2e8f0);border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
+.filter-inputs select{min-width:170px}
+
+/* Day mode theme */
+body.light{--bg:#f8fafc;--bg-secondary:#ffffff;--bg-card:#ffffff;--border:#e2e8f0;--text:#1e293b;--text-muted:#64748b;--text-heading:#0f172a;--table-header:#f1f5f9;--table-hover:#f8fafc;--table-border:#e2e8f0}
+body.light{background:var(--bg);color:var(--text)}
+body.light header{background:var(--bg-secondary);border-color:var(--border)}
+body.light header h1{color:var(--text-heading)}
+body.light header p{color:var(--text-muted)}
+body.light .filter-strip{background:var(--bg-secondary);border-color:var(--border)}
+body.light .kc{background:var(--bg-card);border-color:var(--border)}
+body.light .kl{color:var(--text-muted)}
+body.light .kv{color:var(--text-heading)}
+body.light .card,.body.light .alert-card,.body.light .task-mix-card,.body.light .wm-card,.body.light .ageing-card{background:var(--bg-card);border-color:var(--border)}
+body.light .card,body.light .task-mix-card,body.light .wm-card,body.light .ageing-card{background:var(--bg-card);border-color:var(--border)}
+body.light .sec-title{color:var(--text-heading)}
+body.light .sec-sub{color:var(--text-muted)}
+body.light table thead th{background:var(--table-header);color:var(--text-muted);border-color:var(--border)}
+body.light table tbody tr{border-color:var(--table-border)}
+body.light table tbody tr:hover{background:var(--table-hover)}
+body.light table tbody td{color:var(--text)}
+body.light table tfoot td{color:var(--text-heading);border-color:var(--border)}
+body.light .n,body.light .nb{color:var(--text)}
+body.light .nb{color:var(--text-heading)}
+body.light .top-tab{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
+body.light .top-tab:hover{color:var(--text)}
+body.light .preset{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
+body.light .preset:hover{color:var(--text)}
+body.light .theme-btn{background:var(--bg-card);border-color:var(--border);color:var(--text)}
+body.light .wm-card-header .wm-name{color:var(--text-heading)}
+body.light .wm-card-header .wm-role{color:var(--text-muted)}
+body.light .wm-stat .stat-label{color:var(--text-muted)}
+body.light .wm-stat .stat-value{color:var(--text)}
+body.light .ac-name{color:var(--text-heading)}
+body.light .ac-avatar{background:var(--border);color:var(--text-muted)}
+body.light footer{color:var(--text-muted);border-color:var(--border)}
+body.light .kpi-group-header th{color:#fff !important}
+body.light .progress-bar{background:var(--border)}
+body.light .theme-select{background:var(--bg-card);border-color:var(--border);color:var(--text)}
+body.light .filter-strip{background:var(--bg-secondary);border-color:var(--border)}
+body.light .filter-inputs input[type=date],body.light .filter-inputs select{background:var(--bg-card);border-color:var(--border);color:var(--text)}
+
+footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1px solid #1e2534;margin-top:30px}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><div class="load-text">Loading data from Propforce...</div></div>
+
+<header>
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;flex:1">
+    <div class="logo-area">
+      <div class="logo-badge">WM</div>
+      <div><h1>Wealth Manager Performance</h1><p>Team Scott Nicol &middot; Bayut KSA</p></div>
+    </div>
+    <div class="top-tabs" style="margin:0">
+      <button class="top-tab active" onclick="switchTopTab('kpis-tab')">Wealth Manager KPIs</button>
+      <button class="top-tab" onclick="switchTopTab('board-tab')">Wealth Manager Cards</button>
+      <button class="top-tab" onclick="switchTopTab('pipeline-tab')">WM Pipeline</button>
+      <button class="top-tab" onclick="switchTopTab('analytics-tab')">Analytics</button>
+      <button class="top-tab" onclick="switchTopTab('insights-tab')">Insights</button>
+    </div>
+  </div>
+  <div class="theme-controls">
+    <button class="theme-btn" onclick="toggleEditMode()" id="edit-toggle" title="Edit mode — rename columns and sections">&#9998;</button>
+    <button class="theme-btn" onclick="openImportModal()" id="import-btn" title="Import data">&#8682;</button>
+    <button class="theme-btn notif-btn" onclick="toggleNotifications()" id="notif-toggle" title="Notifications">&#128276;<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-toggle" title="Toggle Day/Night mode">&#9790;</button>
+    <select id="theme-select" class="theme-select" onchange="applyTheme(this.value)" title="Choose theme">
+      <option value="default">Midnight (Default)</option>
+      <option value="ocean">Ocean Blue</option>
+      <option value="forest">Forest Green</option>
+      <option value="sunset">Sunset Orange</option>
+      <option value="royal">Royal Purple</option>
+      <option value="rose">Rose Pink</option>
+      <option value="slate">Slate Gray</option>
+    </select>
+  </div>
+</header>
+
+<!-- NOTIFICATIONS PANEL -->
+<div class="notif-panel" id="notif-panel" style="display:none">
+  <div class="notif-header">Notifications <button onclick="toggleNotifications()" style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;float:right">&times;</button></div>
+  <div class="notif-list" id="notif-list"></div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="import-modal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal-box">
+    <div class="modal-title">Import Data <button onclick="closeImportModal()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;float:right">&times;</button></div>
+    <div class="modal-body">
+      <p style="color:#94a3b8;font-size:12px;margin-bottom:12px">Upload a CSV file to import deals, clients, or notes</p>
+      <select id="import-type" style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:12px;width:100%;margin-bottom:12px">
+        <option value="deals">Pipeline Deals</option>
+        <option value="clients">Clients</option>
+        <option value="notes">Meeting Notes</option>
+      </select>
+      <div class="import-drop" id="import-drop">
+        <input type="file" id="import-file" accept=".csv,.xlsx" style="display:none" onchange="handleImportFile(this)"/>
+        <div onclick="document.getElementById('import-file').click()" style="cursor:pointer;text-align:center;padding:30px;border:2px dashed #3a4556;border-radius:10px">
+          <div style="font-size:24px;margin-bottom:8px">&#128194;</div>
+          <div style="font-size:13px;color:#94a3b8">Click to select file or drag & drop</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">CSV or Excel files supported</div>
+        </div>
+      </div>
+      <div id="import-status" style="margin-top:12px;font-size:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT: SIDEBAR + MAIN -->
+<div class="app-layout">
+  <!-- LEFT SIDEBAR — WM Filter -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Collapse/Expand">&#9776;</button>
+    <div class="sidebar-title">Wealth Managers</div>
+    <div class="sidebar-wm-list" id="sidebar-wm-list">
+      <div class="sidebar-wm active" data-wm="" onclick="selectWM('')">
+        <div class="sidebar-avatar" style="background:#6366f1;font-size:10px">ALL</div>
+        <span>All Managers</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- FILTER BAR -->
+    <div class="filter-strip">
+      <div class="date-presets" id="date-presets">
+        <button class="preset" data-preset="daily">Daily</button>
+        <button class="preset active" data-preset="weekly">Weekly</button>
+        <button class="preset" data-preset="monthly">Monthly</button>
+        <button class="preset" data-preset="quarterly">Quarterly</button>
+        <button class="preset" data-preset="yearly">Yearly</button>
+      </div>
+      <div class="filter-inputs">
+        <label>From</label><input type="date" id="f-start" value="{{ start_date }}"/>
+        <label>To</label><input type="date" id="f-end" value="{{ end_date }}"/>
+        <button class="btn" onclick="loadData()">Apply</button>
+      </div>
+      <select id="f-wm" style="display:none"><option value="">All</option></select>
+    </div>
+
+    <main>
+
+  <!-- WEEKLY DIGEST -->
+  <div class="digest-bar" id="digest-bar" style="display:none"></div>
+
+  <!-- ═══ TAB 1: WEALTH MANAGER KPIs ═══ -->
+  <div class="top-tab-content active" id="kpis-tab">
+
+    <!-- SUMMARY KPI CARDS WITH MINI CHARTS -->
+    <div class="summary-grid" id="summary-cards"></div>
+
+    <!-- WM OVERVIEW (was KPI Dashboard) -->
+    <div class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div><div class="sec-title"><span class="d" style="background:#f59e0b"></span>WM Overview</div>
+        <div class="sec-sub">Activity KPIs &middot; Proposal KPIs &middot; Pipeline & Revenue</div></div>
+        <div class="export-bar"><button class="export-btn" onclick="exportTable('t-kpi','WM_Overview')">&#128196; CSV</button></div>
+      </div>
+      <div class="card"><div class="tw"><table id="t-kpi"></table></div></div>
+    </div>
+
+    <!-- WM ACTIVITY (was Overview) -->
+    <div class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div><div class="sec-title"><span class="d" style="background:#6366f1"></span>WM Activity</div>
+        <div class="sec-sub">Key performance metrics per wealth manager</div></div>
+        <div class="export-bar"><button class="export-btn" onclick="exportTable('t-overview','WM_Activity')">&#128196; CSV</button></div>
+      </div>
+      <div class="card"><div class="tw"><table id="t-overview"></table></div></div>
+    </div>
+
+    <!-- PRODUCTIVITY KPI -->
+    <div class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div><div class="sec-title"><span class="d" style="background:#14b8a6"></span>Productivity KPI</div>
+        <div class="sec-sub">Conversion ratios and efficiency metrics</div></div>
+        <div class="export-bar"><button class="export-btn" onclick="exportTable('t-productivity','Productivity_KPI')">&#128196; CSV</button></div>
+      </div>
+      <div class="card"><div class="tw"><table id="t-productivity"></table></div></div>
+    </div>
+
+    <!-- PRE-SALES CONVERSION -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#ec4899"></span>Pre-Sales Conversion</div>
+      <div class="sec-sub">IB &rarr; IS &rarr; IM &rarr; Deal conversion funnel</div>
+      <div class="card"><div class="tw"><table id="t-conversion"></table></div></div>
+    </div>
+
+    <!-- TASKS BREAKDOWN -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#10b981"></span>Tasks Breakdown</div>
+      <div class="sec-sub">Investors Contacted, Calls, Messages, Meetings, Video, WhatsApp, SMS</div>
+      <div class="card"><div class="tw"><table id="t-tasks"></table></div></div>
+    </div>
+
+    <!-- PRE-SALES (collapsible) -->
+    <div class="sec">
+      <div class="sec-title collapsible" onclick="toggleSection('presales-body')"><span class="d" style="background:#a855f7"></span>Pre-Sales Activity <span class="collapse-icon" id="presales-body-icon">&#9654;</span></div>
+      <div class="sec-sub">Click to expand &middot; Investment Briefs, IS Proposals, IM Proposals (Shared / Accepted / Rejected)</div>
+      <div class="collapse-body" id="presales-body" style="display:none">
+        <div class="card"><div class="tw"><table id="t-presales"></table></div></div>
+      </div>
+    </div>
+
+    <!-- LOGINS -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#14b8a6"></span>Propforce Logins</div>
+      <div class="sec-sub">Login sessions from presence timeline</div>
+      <div class="row2">
+        <div class="card"><div id="ch-login-trend" style="height:260px"></div></div>
+        <div class="card"><div id="ch-login-bar" style="height:260px"></div></div>
+      </div>
+    </div>
+
+    <!-- SALES FUNNEL (collapsible) -->
+    <div class="sec">
+      <div class="sec-title collapsible" onclick="toggleSection('funnel-body')"><span class="d" style="background:#f59e0b"></span>Sales Funnel <span class="collapse-icon" id="funnel-body-icon">&#9654;</span></div>
+      <div class="sec-sub">Click to expand &middot; Client pipeline stages and revenue</div>
+      <div class="collapse-body" id="funnel-body" style="display:none">
+        <div class="card"><div class="tw"><table id="t-funnel"></table></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: ANALYTICS ═══ -->
+  <div class="top-tab-content" id="analytics-tab">
+
+    <!-- ACTIVITY RADAR -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Activity Radar</div>
+      <div class="sec-sub">Comparing wealth managers across key performance dimensions (normalized to team best)</div>
+      <div class="card"><div id="ch-radar" style="height:420px"></div></div>
+    </div>
+
+    <!-- FUNNEL VISUALIZATION -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#f59e0b"></span>Sales Pipeline Funnel</div>
+      <div class="sec-sub">Client journey from Inquiry to Sold — team aggregate</div>
+      <div class="card"><div id="ch-funnel-viz" style="height:350px"></div></div>
+    </div>
+
+    <!-- TASK MIX -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#10b981"></span>Task Mix per Wealth Manager</div>
+      <div class="sec-sub">Distribution of task types for each WM</div>
+      <div class="row2" id="task-mix-charts"></div>
+    </div>
+
+    <!-- WM COMPARISON BAR -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#ec4899"></span>Head-to-Head Comparison</div>
+      <div class="sec-sub">Side-by-side comparison of all wealth managers</div>
+      <div class="card"><div id="ch-comparison" style="height:380px"></div></div>
+    </div>
+
+    <!-- CLIENT ENGAGEMENT -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#14b8a6"></span>Client Engagement Overview</div>
+      <div class="sec-sub">Active vs inactive clients per wealth manager</div>
+      <div class="card"><div id="ch-engagement" style="height:350px"></div></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: WM PIPELINE ═══ -->
+  <div class="top-tab-content" id="pipeline-tab">
+
+    <!-- PIPELINE KPI CARDS -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#f59e0b"></span>Bayut KSA — Wealth Manager Pipeline</div>
+      <div class="sec-sub">Deal tracking across all stages &middot; Probability &amp; next steps analyzed from meeting notes</div>
+      <div class="kpi-grid" id="pipeline-kpis"></div>
+    </div>
+
+    <!-- WM FILTER CHIPS -->
+    <div class="sec" style="margin-bottom:8px">
+      <div class="pipeline-chips" id="pipeline-chips"></div>
+    </div>
+
+    <!-- STAGE FILTER + SEARCH -->
+    <div class="sec" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:12px;color:#94a3b8;font-weight:600">STAGE</span>
+        <div class="stage-filters" id="stage-filters"></div>
+        <input type="text" id="pipeline-search" placeholder="Search deal, client, stage..." oninput="filterPipeline()"
+          style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;flex:1;min-width:200px"/>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:#64748b">
+        Stage key: <span style="color:#6366f1">&#9679; Early Engagement</span> &nbsp;
+        <span style="color:#10b981">&#9679; Information Shared</span> &nbsp;
+        <span style="color:#f59e0b">&#9679; Due Diligence</span> &nbsp;
+        <span style="color:#ef4444">&#9679; Deal Making</span> &nbsp;
+        <span style="color:#94a3b8">&#9679; On Hold</span> &nbsp;
+        <span style="color:#64748b">&#9679; Paused</span>
+      </div>
+    </div>
+
+    <!-- PER-WM DEAL TABLES -->
+    <div id="pipeline-wm-tables"></div>
+
+    <!-- MEETING NOTES -->
+    <div class="sec" style="margin-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div>
+          <div class="sec-title" style="margin-bottom:2px"><span class="d" style="background:#6366f1"></span>Latest Meeting Notes</div>
+          <div class="sec-sub" style="margin-bottom:0">Most recent meeting updates from wealth managers</div>
+        </div>
+        <select id="notes-wm-filter" onchange="filterNotes()" style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;min-width:180px">
+          <option value="">All Wealth Managers</option>
+        </select>
+      </div>
+      <div id="pipeline-notes"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB 2: WEALTH MANAGERS BOARD ═══ -->
+  <div class="top-tab-content" id="board-tab">
+
+    <!-- WM PROFILE CARDS -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Wealth Manager Profiles</div>
+      <div class="sec-sub">Individual performance snapshot for each wealth manager</div>
+      <div class="wm-profiles" id="wm-profiles"></div>
+    </div>
+
+    <!-- AGEING ALERTS -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#ef4444"></span>Ageing Alerts</div>
+      <div class="sec-sub">Inactive clients and pending proposals requiring attention</div>
+      <div class="ageing-grid" id="ageing-alerts"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: INSIGHTS ═══ -->
+  <div class="top-tab-content" id="insights-tab">
+
+    <!-- TEAM PIPELINE HEALTH -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#f59e0b"></span>Team Pipeline Health</div>
+      <div class="sec-sub">Overall pipeline strength and momentum</div>
+      <div class="kpi-grid" id="health-kpis"></div>
+      <div class="row2" style="margin-top:16px">
+        <div class="card"><div id="ch-weighted-pipeline" style="height:300px"></div></div>
+        <div class="card"><div id="ch-stage-distribution" style="height:300px"></div></div>
+      </div>
+    </div>
+
+    <!-- DEAL VELOCITY -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Deal Velocity</div>
+      <div class="sec-sub">Average time deals spend in each stage — helps identify bottlenecks</div>
+      <div class="card"><div id="ch-deal-velocity" style="height:300px"></div></div>
+    </div>
+
+    <!-- CLIENT ENGAGEMENT HEATMAP -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#10b981"></span>Client Engagement Heatmap</div>
+      <div class="sec-sub">Last interaction timeline per WM — surface relationships that need attention</div>
+      <div class="card"><div id="ch-engagement-heatmap" style="height:280px"></div></div>
+    </div>
+
+    <!-- MARKET ACTIVITY THEMES -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#ec4899"></span>Market Activity Themes</div>
+      <div class="sec-sub">Sectors and themes most discussed in meeting notes — strategic coverage view</div>
+      <div class="row2">
+        <div class="card"><div id="ch-market-themes" style="height:320px"></div></div>
+        <div class="card" id="market-themes-table"></div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<!-- Drill-down overlay -->
+<div class="drill-overlay" id="drill-overlay" style="display:none" onclick="if(event.target===this)closeDrill()">
+  <div class="drill-box">
+    <div class="drill-title"><span id="drill-title"></span><button class="drill-close" onclick="closeDrill()">&times;</button></div>
+    <div class="drill-sub" id="drill-sub"></div>
+    <div class="drill-chart" id="drill-chart" style="height:280px"></div>
+    <div id="drill-detail"></div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="cell-tooltip" id="cell-tooltip"></div>
+
+<div class="edit-indicator" id="edit-indicator">&#9998; Edit Mode — Click any title or header to rename. Click the pencil again to save.</div>
+<footer>Wealth Manager Dashboard &middot; Team Scott Nicol &middot; Data from Propforce SA</footer>
+
+<script>
+const PL={paper_bgcolor:"transparent",plot_bgcolor:"transparent",font:{family:"-apple-system,sans-serif",color:"#94a3b8",size:11},margin:{t:10,r:16,b:56,l:50},xaxis:{gridcolor:"#1e2534",linecolor:"#2d3748",tickangle:-25,automargin:true},yaxis:{gridcolor:"#1e2534",linecolor:"#2d3748",zeroline:false},showlegend:false};
+const C=["#6366f1","#f59e0b","#10b981","#3b82f6","#ec4899","#14b8a6","#a855f7","#ef4444"];
+const CFG={responsive:true,displayModeBar:false};
+const fmt=n=>Number(n).toLocaleString();
+const fmtR=n=>{if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return fmt(n)};
+
+// Load WM list for dropdown + sidebar
+const avatarColorsGlobal=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+fetch("/api/wm_list").then(r=>r.json()).then(list=>{
+  const sel=document.getElementById("f-wm");
+  const sidebarList=document.getElementById("sidebar-wm-list");
+  list.forEach((w,i)=>{
+    const o=document.createElement("option");o.value=w.id;o.textContent=w.name;sel.appendChild(o);
+    const initials=w.name.split(' ').map(x=>x[0]).join('').substring(0,2);
+    const col=avatarColorsGlobal[i%avatarColorsGlobal.length];
+    const div=document.createElement('div');
+    div.className='sidebar-wm';div.dataset.wm=w.id;
+    div.innerHTML=`<div class="sidebar-avatar" style="background:${col}">${initials}</div><span>${w.name}</span>`;
+    div.onclick=()=>selectWM(String(w.id));
+    sidebarList.appendChild(div);
+  });
+});
+
+function selectWM(wmId){
+  document.getElementById('f-wm').value=wmId;
+  document.querySelectorAll('.sidebar-wm').forEach(el=>{
+    el.classList.toggle('active',el.dataset.wm===wmId);
+  });
+  loadData();
+}
+
+// Collapsible sidebar
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('wm-sidebar',sb.classList.contains('collapsed')?'collapsed':'expanded');
+  setTimeout(()=>window.dispatchEvent(new Event('resize')),350);
+}
+if(localStorage.getItem('wm-sidebar')==='collapsed')document.getElementById('sidebar').classList.add('collapsed');
+
+// Number count-up animation
+function animateNumber(el,target){
+  const duration=600;const start=0;const startTime=performance.now();
+  const isFloat=String(target).includes('.');
+  function tick(now){
+    const elapsed=now-startTime;const progress=Math.min(elapsed/duration,1);
+    const eased=1-Math.pow(1-progress,3); // ease-out cubic
+    const current=Math.round(start+(target-start)*eased);
+    el.textContent=Number(current).toLocaleString();
+    if(progress<1)requestAnimationFrame(tick);
+    else el.textContent=Number(target).toLocaleString();
+  }
+  requestAnimationFrame(tick);
+  el.classList.add('animated');
+}
+
+// Weekly digest generator
+function renderDigest(D){
+  const ov=D.overview;const kd=D.kpi_dashboard;
+  if(!ov||!ov.length)return;
+
+  // Find top performers in different categories
+  const topTasks=ov.reduce((a,b)=>b.tasks_added>a.tasks_added?b:a);
+  const topLeads=ov.reduce((a,b)=>b.leads_added>a.leads_added?b:a);
+  const topMtg=kd.reduce((a,b)=>(b.meetings_conducted||0)>(a.meetings_conducted||0)?b:a);
+  const topCalls=kd.reduce((a,b)=>(b.qualified_calls||0)>(a.qualified_calls||0)?b:a);
+
+  const totalTasks=ov.reduce((a,r)=>a+r.tasks_added,0);
+  const totalLeads=ov.reduce((a,r)=>a+r.leads_added,0);
+
+  let parts=[];
+  if(topLeads.leads_added>0) parts.push(`<span>${topLeads.name.split(' ')[0]}</span> added <span class="digest-highlight">${topLeads.leads_added} leads</span>`);
+  if(topCalls.qualified_calls>0) parts.push(`<span>${topCalls.name.split(' ')[0]}</span> made <span class="digest-highlight">${topCalls.qualified_calls} qualified calls</span>`);
+  if(topMtg.meetings_conducted>0) parts.push(`<span>${topMtg.name.split(' ')[0]}</span> conducted <span class="digest-highlight">${topMtg.meetings_conducted} meetings</span>`);
+  if(topTasks.tasks_added>0) parts.push(`<span>${topTasks.name.split(' ')[0]}</span> completed <span class="digest-highlight">${topTasks.tasks_added} tasks</span>`);
+
+  const digestEl=document.getElementById('digest-bar');
+  if(parts.length>0){
+    const summary=`Team total: <span class="digest-highlight">${totalLeads}</span> leads, <span class="digest-highlight">${totalTasks}</span> tasks this period`;
+    digestEl.innerHTML=`<div class="digest-icon">&#9889;</div><div class="digest-text">${parts.join(' &middot; ')} &mdash; ${summary}</div>`;
+    digestEl.style.display='flex';
+  } else {
+    digestEl.style.display='none';
+  }
+}
+
+// ── Summary KPI Cards ──
+function renderSummaryCards(D){
+  const ov=D.overview||[];const kd=D.kpi_dashboard||[];const sp=D.sparklines||{};
+  const cols=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const totalLeads=ov.reduce((a,r)=>a+(r.leads_added||0),0);
+  const totalTasks=ov.reduce((a,r)=>a+(r.tasks_added||0),0);
+  const totalCalls=kd.reduce((a,r)=>a+(r.qualified_calls||0),0);
+  const totalMtgs=kd.reduce((a,r)=>a+(r.meetings_conducted||0),0);
+
+  // Card 1: Team Leads + sparkline trend
+  const allLeadDays={};ov.forEach(r=>{const s=sp[r.name];if(s&&s.leads)s.leads.forEach((v,i)=>{allLeadDays[i]=(allLeadDays[i]||0)+v;});});
+  const leadTrend=Object.values(allLeadDays);
+  const leadSparkHtml=leadTrend.length>1?sparklineSVG(leadTrend,120,32,'#6366f1'):'<span style="color:#64748b;font-size:11px">No trend data</span>';
+
+  // Card 2: Team Tasks + mini bars per WM
+  const maxTask=Math.max(...ov.map(r=>r.tasks_added))||1;
+  const taskBars=ov.filter(r=>r.tasks_added>0).sort((a,b)=>b.tasks_added-a.tasks_added).map((r,i)=>{
+    const pct=Math.round(r.tasks_added/maxTask*100);
+    return `<div style="flex:1;text-align:center"><div class="sc-bar" style="height:${pct}%;background:${cols[i%cols.length]}"></div><div class="sc-bar-label">${r.name.split(' ')[0]}</div></div>`;
+  }).join('');
+
+  // Card 3: Qualified Calls + donut split
+  const callData=kd.filter(r=>(r.qualified_calls||0)>0).sort((a,b)=>(b.qualified_calls||0)-(a.qualified_calls||0));
+  const donutSVG=buildMiniDonut(callData.map(r=>r.qualified_calls||0),callData.map((r,i)=>cols[i%cols.length]),40);
+  const callLegend=callData.map((r,i)=>`<span class="sc-legend-dot" style="background:${cols[i%cols.length]}"></span>${r.name.split(' ')[0]}: ${r.qualified_calls||0}`).join('<br>');
+
+  // Card 4: Meetings + progress bars per WM
+  const maxMtg=Math.max(...kd.map(r=>r.meetings_conducted||0))||1;
+  const mtgBars=kd.filter(r=>(r.meetings_conducted||0)>0).sort((a,b)=>(b.meetings_conducted||0)-(a.meetings_conducted||0)).map((r,i)=>{
+    const pct=Math.round((r.meetings_conducted||0)/maxMtg*100);
+    return `<div class="sc-prog-row"><span class="sc-prog-name">${r.name.split(' ')[0]}</span><div class="sc-prog-bar"><div class="sc-prog-fill" style="width:${pct}%;background:${cols[i%cols.length]}"></div></div><span class="sc-prog-val">${r.meetings_conducted||0}</span></div>`;
+  }).join('');
+
+  document.getElementById('summary-cards').innerHTML=`
+    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'leads_added')">
+      <div class="sc-label">Team Leads</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalLeads}">0</div></div>
+      <div class="sc-chart">${leadSparkHtml}</div>
+    </div>
+    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'tasks_added')">
+      <div class="sc-label">Team Tasks</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalTasks}">0</div></div>
+      <div class="sc-chart"><div class="sc-bars">${taskBars||'<span style="color:#64748b;font-size:11px">No tasks</span>'}</div></div>
+    </div>
+    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'qualified_calls')">
+      <div class="sc-label">Qualified Calls</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalCalls}">0</div></div>
+      <div class="sc-chart"><div class="sc-donut">${donutSVG}<div class="sc-legend">${callLegend||'<span style="color:#64748b">No calls</span>'}</div></div></div>
+    </div>
+    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'meetings_conducted')">
+      <div class="sc-label">Meetings</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalMtgs}">0</div></div>
+      <div class="sc-chart sc-progress">${mtgBars||'<span style="color:#64748b;font-size:11px">No meetings</span>'}</div>
+    </div>
+  `;
+  document.querySelectorAll('#summary-cards .sc-value[data-count]').forEach(el=>animateNumber(el,parseInt(el.dataset.count)));
+}
+
+function buildMiniDonut(values,colors,size){
+  if(!values||!values.length||values.every(v=>v===0))return '';
+  const total=values.reduce((a,v)=>a+v,0);
+  const r=size/2;const ir=r*0.6;
+  let cumAngle=-Math.PI/2;
+  let paths='';
+  values.forEach((v,i)=>{
+    if(v===0)return;
+    const angle=(v/total)*Math.PI*2;
+    const x1=r+r*Math.cos(cumAngle);const y1=r+r*Math.sin(cumAngle);
+    const x2=r+r*Math.cos(cumAngle+angle);const y2=r+r*Math.sin(cumAngle+angle);
+    const ix1=r+ir*Math.cos(cumAngle);const iy1=r+ir*Math.sin(cumAngle);
+    const ix2=r+ir*Math.cos(cumAngle+angle);const iy2=r+ir*Math.sin(cumAngle+angle);
+    const large=angle>Math.PI?1:0;
+    paths+=`<path d="M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} L${ix2},${iy2} A${ir},${ir} 0 ${large} 0 ${ix1},${iy1} Z" fill="${colors[i]}"/>`;
+    cumAngle+=angle;
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}<text x="${r}" y="${r+3}" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="700">${total}</text></svg>`;
+}
+
+// ── Drill-down Modal ──
+function openDrill(title,subtitle,chartFn,detailHtml){
+  document.getElementById('drill-title').textContent=title;
+  document.getElementById('drill-sub').textContent=subtitle;
+  document.getElementById('drill-detail').innerHTML=detailHtml||'';
+  document.getElementById('drill-overlay').style.display='flex';
+  setTimeout(()=>{if(chartFn)chartFn('drill-chart');},100);
+}
+function closeDrill(){document.getElementById('drill-overlay').style.display='none';}
+
+function drillMetric(wmName,metric){
+  const D=window._dashData;if(!D)return;
+  const ov=D.overview||[];const kd=D.kpi_dashboard||[];
+  const cols=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const allNames=ov.map(r=>r.name);
+
+  const sp=D.sparklines||{};
+  const METRIC_MAP={
+    leads_added:{label:'Leads Added',desc:'Leads added in selected period',getOv:r=>r.leads_added||0,getKd:null,sparkKey:'leads',color:'#6366f1'},
+    tasks_added:{label:'Tasks Added',desc:'Total tasks logged',getOv:r=>r.tasks_added||0,getKd:null,sparkKey:'tasks',color:'#10b981'},
+    qualified_calls:{label:'Qualified Calls',desc:'Calls with 60s+ talk time',getOv:null,getKd:r=>r.qualified_calls||0,color:'#f59e0b'},
+    meetings_conducted:{label:'Meetings Conducted',desc:'Meeting done + video meetings',getOv:null,getKd:r=>r.meetings_conducted||0,color:'#3b82f6'},
+    unique_meetings:{label:'Unique Meetings',desc:'Unique client meetings (1 per lead)',getOv:r=>r.unique_meetings||0,getKd:null,color:'#ec4899'},
+    pf_logins:{label:'PF Logins',desc:'Unique login days',getOv:r=>r.pf_logins||0,getKd:null,color:'#14b8a6'},
+    leads_worked_on:{label:'Leads Worked On',desc:'Leads with any task added',getOv:r=>r.leads_worked_on||0,getKd:null,color:'#8b5cf6'},
+  };
+  const m=METRIC_MAP[metric];if(!m)return;
+
+  if(wmName){
+    // Individual WM — show their daily trend or single stat
+    const wmOv=ov.find(r=>r.name===wmName)||{};
+    const wmKd=kd.find(r=>r.name===wmName)||{};
+    const val=m.getOv?m.getOv(wmOv):m.getKd?m.getKd(wmKd):0;
+    const wmSp=(sp[wmName]||{})[m.sparkKey]||[];
+    const wmSpDates=(sp[wmName]||{})[m.sparkKey+'_dates']||[];
+
+    openDrill(`${wmName} — ${m.label}`,`${m.desc} · Value: ${val}`,
+      (id)=>{
+        if(wmSp.length>1){
+          // Daily trend bar chart with actual dates
+          const xLabels=wmSpDates.length===wmSp.length?wmSpDates:wmSp.map((_,i)=>'Day '+(i+1));
+          Plotly.newPlot(id,[{x:xLabels,y:wmSp,type:'bar',marker:{color:m.color},
+            hovertemplate:'%{x}: %{y}<extra></extra>'}],
+            {...PL,xaxis:{...PL.xaxis,type:'category',title:{text:'Date',font:{size:10,color:'#94a3b8'}}},margin:{t:10,r:10,b:60,l:40}},CFG);
+        } else {
+          // Single value — show gauge-style
+          Plotly.newPlot(id,[{type:'indicator',mode:'gauge+number',value:val,
+            gauge:{axis:{range:[0,Math.max(val*2,10)],tickcolor:'#4a5568'},bar:{color:m.color},
+            bgcolor:'#1e2534',borderwidth:0,
+            steps:[{range:[0,val],color:m.color+'33'}]},
+            number:{font:{color:'#f1f5f9',size:36}}}],
+            {...PL,margin:{t:20,r:20,b:20,l:20}},CFG);
+        }
+      });
+  } else {
+    // Team total — show pie chart of all WMs
+    const vals=allNames.map(n=>{
+      const o=ov.find(r=>r.name===n)||{};
+      const k=kd.find(r=>r.name===n)||{};
+      return m.getOv?m.getOv(o):m.getKd?m.getKd(k):0;
+    });
+    const total=vals.reduce((a,v)=>a+v,0);
+    openDrill(`Team — ${m.label}`,`${m.desc} · Total: ${total}`,
+      (id)=>{
+        Plotly.newPlot(id,[{labels:allNames,values:vals,type:'pie',hole:.45,
+          marker:{colors:cols},textinfo:'label+value+percent',textfont:{color:'#e2e8f0',size:11}}],
+          {...PL,showlegend:true,margin:{t:10,r:10,b:10,l:10}},CFG);
+      });
+  }
+}
+
+// ── Drill Inactive 30d Leads ──
+function drillInactive30d(wmName){
+  const data=(window._inactive30d||{})[wmName];
+  if(!data||!data.leads||!data.leads.length){
+    openDrill(wmName+' — Inactive Leads (30d)','No inactive leads in last 30 days',null,'<div style="text-align:center;color:#10b981;padding:20px;font-size:14px">All leads are active</div>');
+    return;
+  }
+  const leads=data.leads;
+  const listHtml='<div style="max-height:300px;overflow-y:auto"><table style="width:100%"><thead><tr><th>#</th><th>Lead / Client Name</th></tr></thead><tbody>'+
+    leads.map((name,i)=>`<tr><td style="color:#64748b;width:30px">${i+1}</td><td>${esc(name)}</td></tr>`).join('')+
+    '</tbody></table></div>';
+  openDrill(wmName+' — Inactive Leads (30d)',
+    `${leads.length} leads with no task added in the last 30 days`,
+    null, listHtml);
+}
+
+// ── Cell Tooltip ──
+let tooltipTimer=null;
+function showTooltip(el,text){
+  clearTimeout(tooltipTimer);
+  const tt=document.getElementById('cell-tooltip');
+  const rect=el.getBoundingClientRect();
+  tt.textContent=text;
+  tt.style.left=(rect.left+rect.width/2)+'px';
+  tt.style.top=(rect.top-8)+'px';
+  tt.style.transform='translate(-50%,-100%)';
+  tt.classList.add('visible');
+}
+function hideTooltip(){
+  tooltipTimer=setTimeout(()=>{document.getElementById('cell-tooltip').classList.remove('visible');},100);
+}
+
+// ── Export CSV ──
+function exportTable(tableId,filename){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  let csv=[];
+  table.querySelectorAll('tr').forEach(row=>{
+    const cols=[];
+    row.querySelectorAll('th,td').forEach(cell=>{
+      let text=cell.textContent.trim().replace(/"/g,'""');
+      cols.push('"'+text+'"');
+    });
+    csv.push(cols.join(','));
+  });
+  const blob=new Blob([csv.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=(filename||'export')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+}
+
+
+// ── Sparkline SVG Generator ──
+function sparklineSVG(values,width,height,color){
+  if(!values||!values.length)return '';
+  const w=width||60,h=height||18;
+  const max=Math.max(...values)||1;
+  const min=Math.min(...values);
+  const range=max-min||1;
+  const step=w/(values.length-1||1);
+  const points=values.map((v,i)=>{
+    const x=i*step;
+    const y=h-((v-min)/range)*(h-4)-2;
+    return `${x},${y}`;
+  }).join(' ');
+  // Area fill
+  const areaPoints=`0,${h} ${points} ${w},${h}`;
+  return `<span class="sparkline"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <polygon points="${areaPoints}" fill="${color}22" />
+    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${(values.length-1)*step}" cy="${h-((values[values.length-1]-min)/range)*(h-4)-2}" r="2" fill="${color}"/>
+  </svg></span>`;
+}
+
+// ── Edit Mode ──
+let editModeOn=false;
+function toggleEditMode(){
+  editModeOn=!editModeOn;
+  document.body.classList.toggle('edit-mode',editModeOn);
+  document.getElementById('edit-indicator').style.display=editModeOn?'block':'none';
+  if(editModeOn){
+    // Make section titles and table headers editable
+    document.querySelectorAll('.sec-title,.sec-sub,thead th,.kl,.card-title,.chart-title').forEach(el=>{
+      el.setAttribute('contenteditable','true');
+      el.setAttribute('data-editable','true');
+      el.addEventListener('blur',saveEditedNames);
+    });
+  } else {
+    document.querySelectorAll('[data-editable]').forEach(el=>{
+      el.removeAttribute('contenteditable');
+      el.removeAttribute('data-editable');
+    });
+  }
+}
+function saveEditedNames(){
+  // Save customized names to localStorage
+  const edits={};
+  document.querySelectorAll('[data-editable]').forEach(el=>{
+    const key=el.className+'|'+el.closest('.sec,.card,.kc')?.querySelector('.sec-title,.kl')?.textContent?.substring(0,20);
+    if(key)edits[key]=el.textContent;
+  });
+  localStorage.setItem('wm-dashboard-edits',JSON.stringify(edits));
+}
+
+// ── Import Modal ──
+function openImportModal(){document.getElementById('import-modal').style.display='flex';}
+function closeImportModal(){document.getElementById('import-modal').style.display='none';}
+function handleImportFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  const status=document.getElementById('import-status');
+  status.innerHTML=`<span style="color:#10b981">&#10003; File "${file.name}" selected (${(file.size/1024).toFixed(1)}KB)</span><br><span style="color:#64748b;font-size:11px">Import functionality requires server-side integration with Propforce. Contact your administrator to enable data imports.</span>`;
+}
+
+// ── Notifications ──
+let notifications=[];
+function toggleNotifications(){
+  const panel=document.getElementById('notif-panel');
+  panel.style.display=panel.style.display==='none'?'block':'none';
+}
+function checkNotifications(D){
+  const newNotifs=[];
+  // Check for deals closed
+  if(D.kpi_dashboard){
+    D.kpi_dashboard.forEach(r=>{
+      if(r.deals_closed>0) newNotifs.push({type:'deal',text:`${r.name} has ${r.deals_closed} deal(s) closed`,time:'Recent'});
+    });
+  }
+  // Check for IM accepted
+  if(D.conversion_kpi){
+    D.conversion_kpi.forEach(r=>{
+      if(r.im_accepted>0) newNotifs.push({type:'proposal',text:`${r.name}: ${r.im_accepted} IM proposal(s) accepted`,time:'Recent'});
+      if(r.is_accepted>0) newNotifs.push({type:'proposal',text:`${r.name}: ${r.is_accepted} IS proposal(s) accepted`,time:'Recent'});
+      if(r.ib_accepted>0) newNotifs.push({type:'proposal',text:`${r.name}: ${r.ib_accepted} IB(s) accepted`,time:'Recent'});
+    });
+  }
+  // Check for high-value pipeline movement
+  if(D.pipeline&&D.pipeline.deals){
+    const ddDeals=D.pipeline.deals.filter(d=>d.stage==='Deal Making'&&d.days_since_update<=7);
+    ddDeals.forEach(d=>{
+      newNotifs.push({type:'deal',text:`${d.client_name} (${d.user_name}) — Deal Making stage, updated recently`,time:d.updated});
+    });
+  }
+  // Ageing alerts
+  if(D.ageing_alerts){
+    const highInactive=D.ageing_alerts.inactive_clients.filter(r=>r.inactive>50);
+    highInactive.forEach(r=>{
+      newNotifs.push({type:'alert',text:`${r.name}: ${r.inactive} inactive clients (${r.pct}%)`,time:'Alert'});
+    });
+  }
+  notifications=newNotifs;
+  const badge=document.getElementById('notif-badge');
+  if(notifications.length>0){badge.style.display='flex';badge.textContent=notifications.length;}
+  else{badge.style.display='none';}
+  // Render notification list
+  const list=document.getElementById('notif-list');
+  if(notifications.length===0){
+    list.innerHTML='<div style="padding:20px;text-align:center;color:#64748b;font-size:12px">No new notifications</div>';
+  } else {
+    list.innerHTML=notifications.map(n=>`<div class="notif-item ${n.type}"><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>`).join('');
+  }
+}
+
+// Theme toggle
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight=document.body.classList.contains('light');
+  document.getElementById('theme-toggle').innerHTML=isLight?'&#9728;':'&#9790;';
+  localStorage.setItem('wm-theme',isLight?'light':'dark');
+  // Re-render charts with updated colors
+  window.dispatchEvent(new Event('resize'));
+}
+// Restore theme
+if(localStorage.getItem('wm-theme')==='light'){document.body.classList.add('light');document.getElementById('theme-toggle').innerHTML='&#9728;';}
+
+// Theme selector
+const THEMES=['default','ocean','forest','sunset','royal','rose','slate'];
+function applyTheme(theme){
+  THEMES.forEach(t=>document.body.classList.remove('theme-'+t));
+  if(theme!=='default') document.body.classList.add('theme-'+theme);
+  localStorage.setItem('wm-color-theme',theme);
+}
+// Restore saved theme
+const savedTheme=localStorage.getItem('wm-color-theme');
+if(savedTheme){document.getElementById('theme-select').value=savedTheme;applyTheme(savedTheme);}
+
+// Top tabs
+let insightsRendered=false;
+let analyticsRendered=false;
+function switchTopTab(tabId){
+  document.querySelectorAll('.top-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.top-tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+  setTimeout(()=>{
+    window.dispatchEvent(new Event('resize'));
+    // Lazy render charts that need a visible container
+    if(tabId==='insights-tab'&&!insightsRendered&&window._dashData){
+      try{renderInsights(window._dashData);insightsRendered=true;}catch(e){console.error(e);}
+    }
+    if(tabId==='analytics-tab'&&!analyticsRendered){
+      // Force relayout on analytics charts
+      document.getElementById(tabId).querySelectorAll('[id^="ch-"]').forEach(el=>{
+        if(el.data) Plotly.relayout(el,{autosize:true});
+      });
+      analyticsRendered=true;
+    }
+  },150);
+}
+
+// Date presets
+function setPreset(preset){
+  const today=new Date();
+  const y=today.getFullYear(),m=today.getMonth(),d=today.getDate();
+  let start;
+  if(preset==='daily'){start=new Date(y,m,d);}
+  else if(preset==='weekly'){start=new Date(y,m,d-6);}
+  else if(preset==='monthly'){start=new Date(y,m,1);}
+  else if(preset==='quarterly'){start=new Date(y,m-((m%3)),1);}
+  else if(preset==='yearly'){start=new Date(y,0,1);}
+  const fmt2=dt=>dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  document.getElementById('f-start').value=fmt2(start);
+  document.getElementById('f-end').value=fmt2(today);
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector(`.preset[data-preset="${preset}"]`);
+  if(btn)btn.classList.add('active');
+  loadData();
+}
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
+
+function toggleSection(id){
+  const body=document.getElementById(id);
+  const icon=document.getElementById(id+'-icon');
+  if(body.style.display==='none'){body.style.display='block';icon.classList.add('open');}
+  else{body.style.display='none';icon.classList.remove('open');}
+}
+
+function loadData(){
+  const s=document.getElementById("f-start").value;
+  const e=document.getElementById("f-end").value;
+  const wm=document.getElementById("f-wm").value;
+  document.getElementById("loading").style.display="flex";
+  let url="/api/data?start="+s+"&end="+e;
+  if(wm) url+="&wm="+wm;
+  fetch(url).then(r=>r.json()).then(d=>{
+    render(d);
+    document.getElementById("loading").style.display="none";
+  }).catch(err=>{
+    console.error(err);
+    document.getElementById("loading").style.display="none";
+  });
+}
+
+function tbl(id,headers,rows,footRow){
+  const th="<thead><tr>"+headers.map(h=>`<th class="${h[1]||''}">${h[0]}</th>`).join("")+"</tr></thead>";
+  const tb="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td class="${headers[i][1]||''}">${c}</td>`).join("")+"</tr>").join("")+"</tbody>";
+  const tf=footRow?"<tfoot><tr>"+footRow.map((c,i)=>`<td class="${i===0?'':'nb'}">${c}</td>`).join("")+"</tr></tfoot>":"";
+  document.getElementById(id).innerHTML=th+tb+tf;
+}
+function sc(rows,k){return rows.reduce((a,r)=>a+(r[k]||0),0)}
+
+function render(D){
+  insightsRendered=false;analyticsRendered=false;
+  try{checkNotifications(D);}catch(e){console.error('Notification error:',e);}
+  try{renderDigest(D);}catch(e){console.error('Digest error:',e);}
+  try{renderSummaryCards(D);}catch(e){console.error('Summary cards error:',e);}
+  // KPIs
+  // WM Activity (with sparklines + clickable cells)
+  {
+    const ov=D.overview;const kd=D.kpi_dashboard;const kdMap={};kd.forEach(r=>kdMap[r.name]=r);
+    const sp=D.sparklines||{};
+    const thead=`<thead><tr><th>Name</th><th class="nb">Clients Added</th><th class="n">Qualified Clients</th><th class="nb">Tasks Added</th><th style="width:50px;max-width:50px;padding:4px 2px;font-size:9px">Trend</th><th class="nb">Meetings Conducted</th><th class="n">PF Logins</th><th class="n">Morning Sched</th><th class="n">Morning Att</th></tr></thead>`;
+    const tbody=ov.map(r=>{
+      const k=kdMap[r.name]||{};
+      const taskSpark=sp[r.name]&&sp[r.name].tasks?sparklineSVG(sp[r.name].tasks,44,16,'#10b981'):'';
+      const n=r.name.replace(/'/g,"\\'");
+      return `<tr>
+        <td style="font-weight:600">${r.name}</td>
+        <td class="nb">${fmt(k.clients_added||0)}</td>
+        <td class="n">${fmt(k.qualified_clients||0)}</td>
+        <td class="nb clickable" onclick="drillMetric('${n}','tasks_added')" onmouseenter="showTooltip(this,'Click to see daily tasks')" onmouseleave="hideTooltip()">${fmt(r.tasks_added)}</td>
+        <td class="spark-col">${taskSpark}</td>
+        <td class="nb clickable" onclick="drillMetric('${n}','meetings_conducted')" onmouseenter="showTooltip(this,'Total meetings done + video')" onmouseleave="hideTooltip()">${fmt(k.meetings_conducted||0)}</td>
+        <td class="n clickable" onclick="drillMetric('${n}','pf_logins')" onmouseenter="showTooltip(this,'Unique login days')" onmouseleave="hideTooltip()">${fmt(r.pf_logins)}</td>
+        <td class="n">${fmt(r.morning_scheduled)}</td>
+        <td class="n">${fmt(r.morning_attended)}</td>
+      </tr>`;
+    }).join('');
+    const tf=`<tfoot><tr><td>TOTAL</td><td class="nb">${fmt(kd.reduce((a,r)=>a+(r.clients_added||0),0))}</td><td class="nb">${fmt(kd.reduce((a,r)=>a+(r.qualified_clients||0),0))}</td><td class="nb">${fmt(sc(ov,"tasks_added"))}</td><td></td><td class="nb">${fmt(kd.reduce((a,r)=>a+(r.meetings_conducted||0),0))}</td><td class="nb">${fmt(sc(ov,"pf_logins"))}</td><td class="nb">${fmt(sc(ov,"morning_scheduled"))}</td><td class="nb">${fmt(sc(ov,"morning_attended"))}</td></tr></tfoot>`;
+    document.getElementById('t-overview').innerHTML=thead+'<tbody>'+tbody+'</tbody>'+tf;
+  }
+
+  // Ageing Alerts (card style)
+  {
+    const aa=D.ageing_alerts;
+    if(aa){
+      const ic=aa.inactive_clients;
+      const pp=aa.proposals_pending;
+      const i30=aa.inactive_30d||[];
+      const ppMap={};pp.forEach(r=>ppMap[r.name]=r);
+      const i30Map={};i30.forEach(r=>i30Map[r.name]=r);
+
+      // Store for drill-down
+      window._inactive30d=i30Map;
+
+      const cards=ic.map(r=>{
+        const p=ppMap[r.name]||{total:0};
+        const d30=i30Map[r.name]||{count:0};
+        const initials=r.name.split(' ').map(w=>w[0]).join('').substring(0,2);
+        const pendingCls=p.total>5?'danger-bg':p.total>0?'pending-bg':'ok-bg';
+        const inactiveCls=r.inactive>20?'danger-bg':r.inactive>5?'inactive-bg':'ok-bg';
+        const i30Cls=d30.count>10?'danger-bg':d30.count>0?'pending-bg':'ok-bg';
+        const n=r.name.replace(/'/g,"\\'");
+        return `<div class="ageing-card">
+          <div class="ac-header">
+            <div class="ac-avatar">${initials}</div>
+            <div class="ac-name">${r.name}</div>
+          </div>
+          <div class="ac-stats">
+            <div class="ac-stat ${pendingCls}">
+              <div class="stat-val">${p.total}</div>
+              <div class="stat-lbl">proposals pending</div>
+            </div>
+            <div class="ac-stat ${inactiveCls}">
+              <div class="stat-val">${r.inactive}</div>
+              <div class="stat-lbl">inactive 90d</div>
+            </div>
+            <div class="ac-stat ${i30Cls}" style="cursor:pointer" onclick="drillInactive30d('${n}')">
+              <div class="stat-val">${d30.count}</div>
+              <div class="stat-lbl">inactive 30d</div>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+      document.getElementById("ageing-alerts").innerHTML=cards+`<div style="grid-column:1/-1;font-size:10px;color:#64748b;margin-top:4px;padding:0 4px">
+        <em>* Inactive 90d = leads with no task added in 90 days &middot; Inactive 30d = leads with no task in 30 days (click number to see names) &middot; Proposals Pending = IS/IM shared within 30 days with no response</em></div>`;
+    }
+  }
+
+  // WM Profile Cards
+  {
+    const kd=D.kpi_dashboard;
+    const ovMap={};D.overview.forEach(r=>ovMap[r.name]=r);
+    const pk=D.productivity_kpi;const pkMap={};pk.forEach(r=>pkMap[r.name]=r);
+    const ck=D.conversion_kpi;const ckMap={};ck.forEach(r=>ckMap[r.name]=r);
+    const cards=kd.map(r=>{
+      const ov=ovMap[r.name]||{};
+      const pr=pkMap[r.name]||{};
+      const cv=ckMap[r.name]||{};
+      const initials=r.name.split(' ').map(w=>w[0]).join('').substring(0,2);
+      const imRate=r.im_acceptance_rate||0;
+      const convBadge=r.deals_closed>0?`${Math.round(r.deals_closed/(ov.leads_added||1)*100)}% conv.`:'0% conv.';
+      const convClass=r.deals_closed>0?'':'zero';
+      const revStr=r.revenue>=1e6?(r.revenue/1e6).toFixed(2)+'M':r.revenue>=1e3?(r.revenue/1e3).toFixed(0)+'K':fmt(r.revenue);
+      return `<div class="wm-card">
+        <div class="wm-card-header">
+          <div class="wm-avatar">${initials}</div>
+          <div class="wm-info">
+            <div class="wm-name">${r.name}</div>
+            <div class="wm-role">WM &middot; Team Scott Nicol</div>
+          </div>
+          <div class="wm-conv-badge ${convClass}">${convBadge}</div>
+        </div>
+        <div class="wm-highlights">
+          <div class="wm-highlight"><div class="hl-value green">$${revStr}</div><div class="hl-label">Revenue</div></div>
+          <div class="wm-highlight"><div class="hl-value yellow">${r.active_client_pct}%</div><div class="hl-label">Active %</div><div class="progress-bar"><div class="fill" style="width:${r.active_client_pct}%;background:${r.active_client_pct>=75?'#10b981':r.active_client_pct>=50?'#fbbf24':'#ef4444'}"></div></div></div>
+          <div class="wm-highlight"><div class="hl-value blue">${imRate}%</div><div class="hl-label">IM Accept</div></div>
+        </div>
+        <div class="wm-stats">
+          <div class="wm-stats-left">
+            <div class="wm-stat"><span class="stat-label">Total clients</span><span class="stat-value">${fmt(r.clients_added)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Qualified</span><span class="stat-value">${fmt(r.qualified_clients)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Meetings</span><span class="stat-value">${fmt(r.meetings_conducted)}</span></div>
+            <div class="wm-stat"><span class="stat-label">IM shared</span><span class="stat-value">${fmt(r.im_shared)}</span></div>
+          </div>
+          <div class="wm-stats-right">
+            <div class="wm-stat"><span class="stat-label">Active</span><span class="stat-value">${fmt(ov.leads_added||0)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Qualified calls</span><span class="stat-value">${fmt(r.qualified_calls||0)}</span></div>
+            <div class="wm-stat"><span class="stat-label">IS shared</span><span class="stat-value">${fmt(r.is_shared)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Deals closed</span><span class="stat-value">${fmt(r.deals_closed)}</span></div>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+    document.getElementById("wm-profiles").innerHTML=cards;
+  }
+
+  // KPI Dashboard
+  {
+    const kd=D.kpi_dashboard;
+    if(kd && kd.length){
+      const groupH=`<tr class="kpi-group-header">
+        <th class="kpi-id" rowspan="1">IDENTITY</th>
+        <th class="kpi-act" colspan="6">ACTIVITY KPIs</th>
+        <th class="kpi-prop" colspan="3">PROPOSAL KPIs</th>
+        <th class="kpi-pipe" colspan="2">PIPELINE & REVENUE</th>
+      </tr>`;
+      const colH=`<tr>
+        <th>Name</th>
+        <th class="n">Leads Added</th><th style="width:50px;max-width:50px;padding:4px 2px;font-size:9px">Trend</th><th class="n">Leads Worked On</th><th class="n">Qualified Calls</th><th class="n">Unique Meetings</th>
+        <th class="n">IB Shared</th><th class="n">IS Shared</th><th class="n">IM Shared</th>
+        <th class="n">Deals Closed</th><th class="n">Revenue ($)</th>
+      </tr>`;
+      const ovMap={};D.overview.forEach(r=>ovMap[r.name]=r);
+      const sp=D.sparklines||{};
+      const tbody=kd.map(r=>{const ov=ovMap[r.name]||{};
+        const leadSpark=sp[r.name]&&sp[r.name].leads?sparklineSVG(sp[r.name].leads,44,16,'#6366f1'):'';
+        return `<tr>
+          <td>${r.name}</td>
+          <td class="nb clickable" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(ov.leads_added||0)}</td><td>${leadSpark}</td><td class="nb clickable" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(ov.leads_worked_on||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','qualified_calls')" onmouseenter="showTooltip(this,'Calls with 60s+ talk time')" onmouseleave="hideTooltip()">${fmt(r.qualified_calls||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','unique_meetings')" onmouseenter="showTooltip(this,'Unique client meetings (1 per lead)')" onmouseleave="hideTooltip()">${fmt(ov.unique_meetings||0)}</td>
+          <td class="n">${fmt(r.ib_shared)}</td><td class="n">${fmt(r.is_shared)}</td><td class="n">${fmt(r.im_shared)}</td>
+          <td class="nb">${fmt(r.deals_closed)}</td><td class="nb">${fmtR(r.revenue)}</td>
+        </tr>`;}).join("");
+      const len=kd.length;
+      const avg=(key)=>len?Math.round(kd.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
+      const ovAvg=(key)=>{const vals=D.overview;return vals.length?Math.round(vals.reduce((a,r)=>a+(r[key]||0),0)/vals.length*10)/10:0;};
+      const tavg=`<tr style="border-top:2px solid #f59e0b;font-weight:700;color:#fbbf24;">
+        <td>TEAM AVERAGE</td>
+        <td class="nb clickable" onclick="drillMetric(null,'leads_added')">${ovAvg('leads_added')}</td><td></td><td class="nb clickable" onclick="drillMetric(null,'leads_worked_on')">${ovAvg('leads_worked_on')}</td><td class="nb clickable" onclick="drillMetric(null,'qualified_calls')">${avg('qualified_calls')}</td><td class="nb clickable" onclick="drillMetric(null,'unique_meetings')">${ovAvg('unique_meetings')}</td>
+        <td class="n">${avg('ib_shared')}</td><td class="n">${avg('is_shared')}</td><td class="n">${avg('im_shared')}</td>
+        <td class="nb">${avg('deals_closed')}</td><td class="nb">${fmtR(avg('revenue'))}</td>
+      </tr>`;
+      document.getElementById("t-kpi").innerHTML=`<thead>${groupH}${colH}</thead><tbody>${tbody}</tbody><tfoot>${tavg}</tfoot>`;
+    }
+  }
+
+  // Productivity KPI
+  {
+    const pk=D.productivity_kpi;
+    if(pk && pk.length){
+      const kd2=D.kpi_dashboard;const kdMap={};kd2.forEach(r=>kdMap[r.name]=r);
+      const h=[["Name",""],["Calls per Meeting","n"],["Meetings per Proposal","n"],["Proposals per Deal","n"]];
+      const rows=pk.map(r=>[
+        r.name,
+        r.calls_per_meeting||'-',
+        r.meetings_per_proposal||'-',
+        r.proposals_per_deal||'-'
+      ]);
+      const len=pk.length;
+      const avg=(key)=>len?Math.round(pk.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
+      const foot=["TEAM AVERAGE",avg('calls_per_meeting')||'-',avg('meetings_per_proposal')||'-',avg('proposals_per_deal')||'-'];
+      tbl("t-productivity",h,rows,foot);
+    }
+  }
+
+  // Pre-Sales Conversion
+  {
+    const ck=D.conversion_kpi;
+    if(ck && ck.length){
+      const groupH=`<tr class="kpi-group-header">
+        <th class="kpi-id">IDENTITY</th>
+        <th class="kpi-act" colspan="3">IB CONVERSION</th>
+        <th class="kpi-prop" colspan="3">IS CONVERSION</th>
+        <th class="kpi-pipe" colspan="3">IM CONVERSION</th>
+        <th class="kpi-prod" colspan="3">FUNNEL CONVERSION</th>
+      </tr>`;
+      const colH=`<tr>
+        <th>Name</th>
+        <th class="n">IB Shared</th><th class="n">IB Accepted</th><th class="n">IB Accept %</th>
+        <th class="n">IS Shared</th><th class="n">IS Accepted</th><th class="n">IS Accept %</th>
+        <th class="n">IM Shared</th><th class="n">IM Accepted</th><th class="n">IM Accept %</th>
+        <th class="n">IB\u2192IS %</th><th class="n">IS\u2192IM %</th><th class="n">IM\u2192Close %</th>
+      </tr>`;
+      const rateClass=(v)=>v>=80?'cell-green':v>=50?'cell-yellow':v>0?'cell-red':'';
+      const tbody=ck.map(r=>`<tr>
+        <td>${r.name}</td>
+        <td class="n">${fmt(r.ib_shared)}</td><td class="n">${fmt(r.ib_accepted)}</td><td class="n ${rateClass(r.ib_acceptance_rate)}">${r.ib_acceptance_rate}%</td>
+        <td class="n">${fmt(r.is_shared)}</td><td class="n">${fmt(r.is_accepted)}</td><td class="n ${rateClass(r.is_acceptance_rate)}">${r.is_acceptance_rate}%</td>
+        <td class="n">${fmt(r.im_shared)}</td><td class="n">${fmt(r.im_accepted)}</td><td class="n ${rateClass(r.im_acceptance_rate)}">${r.im_acceptance_rate}%</td>
+        <td class="n ${rateClass(r.ib_to_is_rate)}">${r.ib_to_is_rate}%</td><td class="n ${rateClass(r.is_to_im_rate)}">${r.is_to_im_rate}%</td><td class="n ${rateClass(r.im_to_closure_rate)}">${r.im_to_closure_rate}%</td>
+      </tr>`).join("");
+      const len=ck.length;
+      const avg=(key)=>len?Math.round(ck.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
+      const tavg=`<tr style="border-top:2px solid #ec4899;font-weight:700;color:#f472b6;">
+        <td>TEAM AVERAGE</td>
+        <td class="n">${avg('ib_shared')}</td><td class="n">${avg('ib_accepted')}</td><td class="n">${avg('ib_acceptance_rate')}%</td>
+        <td class="n">${avg('is_shared')}</td><td class="n">${avg('is_accepted')}</td><td class="n">${avg('is_acceptance_rate')}%</td>
+        <td class="n">${avg('im_shared')}</td><td class="n">${avg('im_accepted')}</td><td class="n">${avg('im_acceptance_rate')}%</td>
+        <td class="n">${avg('ib_to_is_rate')}%</td><td class="n">${avg('is_to_im_rate')}%</td><td class="n">${avg('im_to_closure_rate')}%</td>
+      </tr>`;
+      document.getElementById("t-conversion").innerHTML=`<thead>${groupH}${colH}</thead><tbody>${tbody}</tbody><tfoot>${tavg}</tfoot>`;
+    }
+  }
+
+  // Tasks
+  {
+    const tk=D.task_breakdown, cols=D.task_cols;
+    const h=[["Name",""],["Investors","n"],["Total","nb"]].concat(cols.map(c=>[c,"n"]));
+    const rows=tk.map(r=>[r.name,fmt(r.investors_contacted),fmt(r.total)].concat(cols.map(c=>fmt(r[c]||0))));
+    const tot=["TOTAL",fmt(sc(tk,"investors_contacted")),fmt(sc(tk,"total"))].concat(cols.map(c=>fmt(tk.reduce((a,r)=>a+(r[c]||0),0))));
+    tbl("t-tasks",h,rows,tot);
+  }
+
+  // Pre-sales
+  {
+    const ps=D.presales, cols=D.presales_cols;
+    const h=[["Name",""]].concat(cols.map(c=>[c,"n"]));
+    const rows=ps.map(r=>[r.name].concat(cols.map(c=>fmt(r[c]||0))));
+    const tot=["TOTAL"].concat(cols.map(c=>fmt(ps.reduce((a,r)=>a+(r[c]||0),0))));
+    tbl("t-presales",h,rows,tot);
+  }
+
+  // Funnel
+  {
+    const fn=D.funnel_table;
+    const h=[["Name",""],["Inquiry","n"],["Prospect","n"],["Mature","n"],["Pre-closure","n"],["Sold","n"],["Closed Lost","n"],["Mature Rev","n"],["Pre-clo Rev","n"],["Sold Rev","n"]];
+    const rows=fn.map(r=>[r.user_name,fmt(r.inquiries),fmt(r.prospects),fmt(r.mature),fmt(r.preclosure),fmt(r.sold),fmt(r.closedlost),fmtR(r.mature_rev),fmtR(r.preclosure_rev),fmtR(r.sold_rev)]);
+    const t=fn.reduce((a,r)=>({i:a.i+r.inquiries,p:a.p+r.prospects,m:a.m+r.mature,pc:a.pc+r.preclosure,s:a.s+r.sold,cl:a.cl+r.closedlost,mr:a.mr+r.mature_rev,pr:a.pr+r.preclosure_rev,sr:a.sr+r.sold_rev}),{i:0,p:0,m:0,pc:0,s:0,cl:0,mr:0,pr:0,sr:0});
+    tbl("t-funnel",h,rows,["TOTAL",fmt(t.i),fmt(t.p),fmt(t.m),fmt(t.pc),fmt(t.s),fmt(t.cl),fmtR(t.mr),fmtR(t.pr),fmtR(t.sr)]);
+  }
+
+  // Login charts
+  {
+    const hex=(x,y,h)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return{x,y,type:"scatter",mode:"lines+markers",line:{color:h,width:2},marker:{size:4,color:h},fill:"tozeroy",fillcolor:`rgba(${r},${g},${b},0.1)`}};
+    Plotly.newPlot("ch-login-trend",[hex(D.logins_trend.x,D.logins_trend.y,C[2])],{...PL,title:{text:"Daily Login Sessions",font:{size:13,color:"#f1f5f9"},x:0.01}},CFG);
+    Plotly.newPlot("ch-login-bar",[{x:D.logins_bar.x,y:D.logins_bar.y,type:"bar",marker:{color:C[3]}}],{...PL,xaxis:{...PL.xaxis,type:"category"},title:{text:"Logins per Wealth Manager",font:{size:13,color:"#f1f5f9"},x:0.01}},CFG);
+  }
+
+  // ═══ ANALYTICS CHARTS ═══
+
+  // 1. Activity Radar Chart
+  {
+    const kd=D.kpi_dashboard;const ov=D.overview;const ovMap={};ov.forEach(r=>ovMap[r.name]=r);
+    const dims=['Calls','Meetings','Tasks','Leads','Logins'];
+    // Get max for normalization
+    const maxCalls=Math.max(...kd.map(r=>r.qualified_calls||0))||1;
+    const maxMtg=Math.max(...kd.map(r=>r.meetings_conducted))||1;
+    const maxTasks=Math.max(...ov.map(r=>r.tasks_added))||1;
+    const maxLeads=Math.max(...ov.map(r=>r.leads_added))||1;
+    const maxLogins=Math.max(...ov.map(r=>r.pf_logins))||1;
+    const traces=kd.map((r,i)=>{
+      const o=ovMap[r.name]||{};
+      const vals=[(r.qualified_calls||0)/maxCalls*100,r.meetings_conducted/maxMtg*100,(o.tasks_added||0)/maxTasks*100,(o.leads_added||0)/maxLeads*100,(o.pf_logins||0)/maxLogins*100];
+      return{type:'scatterpolar',r:[...vals,vals[0]],theta:[...dims,dims[0]],fill:'toself',name:r.name,
+        line:{color:C[i%C.length],width:2},fillcolor:C[i%C.length].replace(')',',0.1)').replace('rgb','rgba'),opacity:0.9};
+    });
+    Plotly.newPlot("ch-radar",traces,{...PL,showlegend:true,legend:{font:{size:11,color:"#94a3b8"},bgcolor:"transparent"},
+      polar:{bgcolor:"transparent",radialaxis:{visible:true,range:[0,100],gridcolor:"#2d3748",linecolor:"#2d3748",tickfont:{color:"#64748b",size:9}},
+      angularaxis:{gridcolor:"#2d3748",linecolor:"#2d3748",tickfont:{color:"#94a3b8",size:11}}},
+      margin:{t:20,r:60,b:20,l:60}},CFG);
+  }
+
+  // 2. Sales Pipeline Funnel
+  {
+    const fn=D.funnel_table;
+    const stages=['inquiries','prospects','mature','preclosure','sold'];
+    const labels=['Inquiry','Prospect','Mature','Pre-closure','Sold'];
+    const colors=['#6366f1','#8b5cf6','#a855f7','#f59e0b','#10b981'];
+    const vals=stages.map(s=>fn.reduce((a,r)=>a+(r[s]||0),0));
+    Plotly.newPlot("ch-funnel-viz",[{type:'funnel',y:labels,x:vals,textinfo:'value+percent initial',
+      marker:{color:colors},textfont:{color:'#f1f5f9',size:14},
+      connector:{line:{color:'#2d3748',width:1}}}],
+      {...PL,margin:{t:10,r:40,b:10,l:100},funnelmode:'stack'},CFG);
+  }
+
+  // 3. Task Mix Donuts
+  {
+    const tk=D.task_breakdown;const cols=D.task_cols;
+    const donutColors=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899','#14b8a6','#a855f7','#ef4444'];
+    let html='';
+    tk.forEach((r,idx)=>{
+      const id='taskmix-'+idx;
+      html+=`<div class="task-mix-card"><div style="font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:8px">${r.name} <span style="color:#64748b;font-weight:400">(${fmt(r.total)} tasks)</span></div><div id="${id}" style="height:220px"></div></div>`;
+    });
+    document.getElementById("task-mix-charts").innerHTML=html;
+    tk.forEach((r,idx)=>{
+      const id='taskmix-'+idx;
+      if(r.total===0){
+        document.getElementById(id).innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:13px">No tasks in this period</div>';
+        return;
+      }
+      const vals=cols.map(c=>r[c]||0).filter(v=>v>0);
+      const lbls=cols.filter(c=>(r[c]||0)>0);
+      Plotly.newPlot(id,[{type:'pie',values:vals,labels:lbls,hole:0.45,
+        marker:{colors:donutColors},textinfo:'label+percent',textfont:{color:'#e2e8f0',size:10},
+        insidetextorientation:'radial'}],
+        {...PL,showlegend:false,margin:{t:5,r:5,b:5,l:5}},CFG);
+    });
+  }
+
+  // 4. Head-to-Head Comparison (grouped bar)
+  {
+    const kd=D.kpi_dashboard;const ov=D.overview;const ovMap={};ov.forEach(r=>ovMap[r.name]=r);
+    const names=kd.map(r=>r.name);
+    const metrics=[
+      {name:'Qualified Calls',vals:kd.map(r=>r.qualified_calls||0),color:'#6366f1'},
+      {name:'Meetings',vals:kd.map(r=>r.meetings_conducted),color:'#10b981'},
+      {name:'Tasks',vals:ov.map(r=>r.tasks_added),color:'#f59e0b'},
+      {name:'Leads',vals:ov.map(r=>r.leads_added),color:'#3b82f6'},
+      {name:'Logins',vals:ov.map(r=>r.pf_logins),color:'#ec4899'},
+    ];
+    const traces=metrics.map(m=>({x:names,y:m.vals,type:'bar',name:m.name,marker:{color:m.color}}));
+    Plotly.newPlot("ch-comparison",traces,{...PL,barmode:'group',showlegend:true,
+      legend:{font:{size:11,color:"#94a3b8"},bgcolor:"transparent",orientation:"h",y:1.12},
+      xaxis:{...PL.xaxis,type:'category'},margin:{t:40,r:16,b:60,l:50}},CFG);
+  }
+
+  // 5. Client Engagement (stacked bar — active vs inactive)
+  {
+    const aa=D.ageing_alerts;
+    if(aa){
+      const ic=aa.inactive_clients;
+      const names=ic.map(r=>r.name);
+      const active=ic.map(r=>r.active);
+      const inactive=ic.map(r=>r.inactive);
+      Plotly.newPlot("ch-engagement",[
+        {x:names,y:active,type:'bar',name:'Active (met in 90d)',marker:{color:'#10b981'}},
+        {x:names,y:inactive,type:'bar',name:'Inactive (no meeting 90d)',marker:{color:'#ef4444',opacity:0.6}}
+      ],{...PL,barmode:'stack',showlegend:true,
+        legend:{font:{size:11,color:"#94a3b8"},bgcolor:"transparent",orientation:"h",y:1.1},
+        xaxis:{...PL.xaxis,type:'category'},margin:{t:35,r:16,b:60,l:50}},CFG);
+    }
+  }
+
+  // ═══ PIPELINE TAB ═══
+  try{renderPipeline(D);}catch(e){console.error('Pipeline render error:',e);}
+  // Store data for lazy rendering; render if tab is currently active
+  window._dashData=D;
+  if(document.getElementById('insights-tab').classList.contains('active')){
+    try{renderInsights(D);insightsRendered=true;}catch(e){console.error(e);}
+  }
+}
+
+let pipelineData=null;
+let pipelineWMFilter='all';
+let pipelineStageFilter='all';
+
+function renderPipeline(D){
+  const p=D.pipeline;if(!p)return;
+  pipelineData=p;
+
+  // Pipeline KPI cards
+  const total=p.total_deals;
+  const ddPlus=p.deals.filter(d=>['Due Diligence','Deal Making'].includes(d.stage)).length;
+  const ddPct=total?Math.round(ddPlus/total*100):0;
+  const onHold=p.deals.filter(d=>d.stage==='On Hold').length;
+  const paused=p.deals.filter(d=>d.stage==='Paused').length;
+  const earlyEng=p.deals.filter(d=>d.stage==='Early Engagement').length;
+  const infoShared=p.deals.filter(d=>d.stage==='Information Shared').length;
+  document.getElementById('pipeline-kpis').innerHTML=`
+    <div class="kc"><div class="kl">Total Deals Tracked</div><div class="kv" data-count="${total}">0</div><div style="font-size:11px;color:#64748b;margin-top:4px">${Object.keys(p.stage_counts).length} wealth managers</div></div>
+    <div class="kc"><div class="kl">DD or Above</div><div class="kv" data-count="${ddPlus}">0</div><div style="font-size:11px;color:#64748b;margin-top:4px">${ddPct}% of shown deals</div></div>
+    <div class="kc"><div class="kl">Early Engagement</div><div class="kv" data-count="${earlyEng}">0</div></div>
+    <div class="kc"><div class="kl">Information Shared</div><div class="kv" data-count="${infoShared}">0</div></div>
+    <div class="kc"><div class="kl">On Hold</div><div class="kv" data-count="${onHold}">0</div></div>
+    <div class="kc"><div class="kl">Paused</div><div class="kv" data-count="${paused}">0</div></div>
+  `;
+  document.querySelectorAll('#pipeline-kpis .kv[data-count]').forEach(el=>animateNumber(el,parseInt(el.dataset.count)));
+
+  // WM chips
+  const wmCounts={};p.deals.forEach(d=>{wmCounts[d.user_name]=(wmCounts[d.user_name]||0)+1;});
+  const avatarColors=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  let chipHtml=`<div class="pip-chip active" onclick="setPipelineWM('all')"><span style="font-weight:700">ALL</span> All Managers<span class="chip-info">${total} deals</span></div>`;
+  Object.entries(wmCounts).sort((a,b)=>b[1]-a[1]).forEach(([name,cnt],i)=>{
+    const initials=name.split(' ').map(w=>w[0]).join('').substring(0,2);
+    chipHtml+=`<div class="pip-chip" onclick="setPipelineWM('${name}')"><div class="chip-avatar" style="background:${avatarColors[i%avatarColors.length]}">${initials}</div>${name.split(' ')[0]}<span class="chip-info">${cnt} deals</span></div>`;
+  });
+  document.getElementById('pipeline-chips').innerHTML=chipHtml;
+
+  // Stage filter buttons
+  const stageOrder=p.stage_order;const stageCols=p.stage_colors;
+  let stageHtml=`<button class="stage-btn active" onclick="setPipelineStage('all')" style="background:#6366f1;color:#fff">All stages</button>`;
+  stageOrder.forEach(s=>{
+    const cnt=p.deals.filter(d=>d.stage===s).length;
+    if(cnt>0) stageHtml+=`<button class="stage-btn" onclick="setPipelineStage('${s}')" data-stage="${s}"><span class="stage-dot" style="background:${stageCols[s]||'#94a3b8'}"></span>${s}</button>`;
+  });
+  document.getElementById('stage-filters').innerHTML=stageHtml;
+
+  filterPipeline();
+
+  // Meeting notes — populate filter dropdown
+  const notesSel=document.getElementById('notes-wm-filter');
+  if(notesSel){
+    notesSel.innerHTML='<option value="">All Wealth Managers</option>';
+    const noteWMs=[...new Set((p.notes||[]).map(n=>n.user_name))];
+    noteWMs.forEach(wm=>{
+      const opt=document.createElement('option');opt.value=wm;opt.textContent=wm;
+      notesSel.appendChild(opt);
+    });
+  }
+  filterNotes();
+}
+
+function filterNotes(){
+  if(!pipelineData)return;
+  const wmFilter=(document.getElementById('notes-wm-filter')||{}).value||'';
+  const avatarColors=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const notes=(pipelineData.notes||[]).filter(n=>!wmFilter||n.user_name===wmFilter);
+  const wmList=[...new Set(pipelineData.notes.map(n=>n.user_name))];
+  let notesHtml='';
+  notes.slice(0,20).forEach((n,i)=>{
+    const initials=n.user_name.split(' ').map(w=>w[0]).join('').substring(0,2);
+    const idx=wmList.indexOf(n.user_name);
+    const col=avatarColors[idx>=0?idx%avatarColors.length:0];
+    notesHtml+=`<div class="note-card">
+      <div class="note-header"><div class="note-avatar" style="background:${col}">${initials}</div>
+        <div><div class="note-name">${n.user_name}</div></div>
+        <div class="note-date">${n.date}</div></div>
+      <div class="note-title">${esc(n.title)}</div>
+      ${n.ai_summary?`<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;line-height:1.5"><span style="color:#818cf8;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px">AI Summary</span><br><span style="color:#e2e8f0">${esc(n.ai_summary)}</span></div>`:''}
+      <div class="note-body" id="note-body-${i}">${esc(n.notes)}</div>
+      ${n.notes.length>200?`<div class="note-toggle" onclick="toggleNote(${i})">Show more</div>`:''}
+    </div>`;
+  });
+  document.getElementById('pipeline-notes').innerHTML=notesHtml||'<div style="color:#64748b;font-size:13px;padding:20px">No meeting notes in this period</div>';
+}
+
+function toggleNote(i){
+  const el=document.getElementById('note-body-'+i);
+  el.classList.toggle('expanded');
+  el.nextElementSibling.textContent=el.classList.contains('expanded')?'Show less':'Show more';
+}
+
+function setPipelineWM(name){
+  pipelineWMFilter=name;
+  document.querySelectorAll('.pip-chip').forEach(c=>c.classList.remove('active'));
+  event.target.closest('.pip-chip').classList.add('active');
+  filterPipeline();
+}
+
+function setPipelineStage(stage){
+  pipelineStageFilter=stage;
+  document.querySelectorAll('.stage-btn').forEach(b=>b.classList.remove('active'));
+  event.target.closest('.stage-btn').classList.add('active');
+  if(stage!=='all')event.target.closest('.stage-btn').style.background=pipelineData.stage_colors[stage]||'#94a3b8';
+  filterPipeline();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function buildPipelineTable(deals, showManager, noHeader){
+  if(!deals||!deals.length)return '<tbody><tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px">No deals found</td></tr></tbody>';
+  const stageCols=pipelineData.stage_colors;
+  const avatarColors=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const wmNames=Object.keys(pipelineData.stage_counts);
+
+  const managerCol=showManager?'<th>MANAGER</th>':'';
+  const thead=noHeader?'':`<thead><tr>${managerCol}<th>CLIENT / DEAL</th><th>STAGE</th><th class="n">PROBABILITY</th><th class="n">EST. VALUE</th><th>NEXT STEP</th><th>UPDATED</th></tr></thead>`;
+  const tbody=deals.sort((a,b)=>b.updated.localeCompare(a.updated)).map(d=>{
+    const initials=d.user_name.split(' ').map(w=>w[0]).join('').substring(0,2);
+    const idx=wmNames.indexOf(d.user_name);
+    const col=avatarColors[idx>=0?idx%avatarColors.length:0];
+    const stageCol=stageCols[d.stage]||'#94a3b8';
+    const estVal=d.est_deal_value||d.budget||0;
+    const budgetStr=estVal>0?fmtR(estVal):'TBC';
+    const probColor=d.probability>=40?'#10b981':d.probability>=20?'#f59e0b':'#94a3b8';
+    const probBar=`<div style="display:flex;align-items:center;gap:6px"><span style="color:${probColor};font-weight:700">${d.probability}%</span><div style="width:50px;height:4px;background:#1e2534;border-radius:2px"><div style="width:${d.probability}%;height:100%;background:${probColor};border-radius:2px"></div></div></div>`;
+    const managerTd=showManager?`<td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>${d.user_name.split(' ')[0]}</div></td>`:'';
+    return `<tr>
+      ${managerTd}
+      <td style="font-weight:600">${d.client_name}</td>
+      <td><span style="background:${stageCol}22;color:${stageCol};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600">${d.stage}</span></td>
+      <td class="n">${probBar}</td>
+      <td class="n">${budgetStr}</td>
+      <td style="font-size:11px;color:#94a3b8;max-width:250px;white-space:normal;line-height:1.4">${esc(d.next_step)||'—'}</td>
+      <td style="color:#64748b;font-size:11px">${d.updated}</td>
+    </tr>`;
+  }).join('');
+  return thead+'<tbody>'+tbody+'</tbody>';
+}
+
+function filterPipeline(){
+  if(!pipelineData)return;
+  const search=(document.getElementById('pipeline-search')||{}).value||'';
+  const searchLc=search.toLowerCase();
+  let deals=pipelineData.deals;
+  if(pipelineWMFilter!=='all') deals=deals.filter(d=>d.user_name===pipelineWMFilter);
+  if(pipelineStageFilter!=='all') deals=deals.filter(d=>d.stage===pipelineStageFilter);
+  if(searchLc) deals=deals.filter(d=>(d.client_name||'').toLowerCase().includes(searchLc)||(d.user_name||'').toLowerCase().includes(searchLc)||(d.stage||'').toLowerCase().includes(searchLc));
+
+  const stageCols=pipelineData.stage_colors;
+  const avatarColors=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const wmNames=Object.keys(pipelineData.stage_counts);
+  let wmTablesHtml='';
+
+  const wmOrder=['Ryan Dougan','Garima Bhargava','Justin James Beckwith','Alshareef Al-Shareef','Karan Sehgal'];
+  const orderedNames=wmOrder.filter(n=>wmNames.includes(n)).concat(wmNames.filter(n=>!wmOrder.includes(n)));
+  orderedNames.forEach((wm,wi)=>{
+    const wmDeals=deals.filter(d=>d.user_name===wm).sort((a,b)=>b.updated.localeCompare(a.updated));
+    if(wmDeals.length===0)return;
+    const initials=wm.split(' ').map(w=>w[0]).join('').substring(0,2);
+    const col=avatarColors[wi%avatarColors.length];
+    const sc=pipelineData.stage_counts[wm]||{};
+    const stageBadges=pipelineData.stage_order.filter(s=>(sc[s]||0)>0).map(s=>
+      `<span style="background:${stageCols[s]||'#94a3b8'}22;color:${stageCols[s]||'#94a3b8'};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;margin-right:4px">${s}: ${sc[s]}</span>`
+    ).join('');
+
+    const top10=wmDeals.slice(0,10);
+    const rest=wmDeals.slice(10);
+    const tableId='wm-pipe-'+wi;
+    const showMoreBtn=rest.length>0?`<div style="text-align:center;margin-top:10px"><button class="btn" style="font-size:11px;padding:6px 16px" onclick="toggleWMDeals('${tableId}',this)">${rest.length} more deals — Show more</button></div>`:'';
+
+    wmTablesHtml+=`
+      <div class="sec" style="margin-top:20px">
+        <div class="sec-title">
+          <div style="width:32px;height:32px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">${initials}</div>
+          ${wm} <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px">${wmDeals.length} deals</span>
+        </div>
+        <div style="margin:8px 0 12px">${stageBadges}</div>
+        <div class="card">
+          <div class="tw"><table>${buildPipelineTable(top10,false)}</table></div>
+          ${rest.length>0?`<div class="tw" id="${tableId}" style="display:none"><table>${buildPipelineTable(rest,false,true)}</table></div>`:''}
+          ${showMoreBtn}
+        </div>
+      </div>`;
+  });
+  document.getElementById('pipeline-wm-tables').innerHTML=wmTablesHtml;
+}
+
+function toggleWMDeals(id,btn){
+  const el=document.getElementById(id);
+  if(el.style.display==='none'){el.style.display='block';btn.textContent='Show less';}
+  else{el.style.display='none';btn.textContent=btn.textContent.replace('Show less',el.querySelectorAll('tr').length-1+' more deals — Show more');}
+}
+
+// ═══ INSIGHTS TAB ═══
+function renderInsights(D){
+  const ins=D.insights;if(!ins)return;
+  const ph=ins.pipeline_health;
+  const sv=ins.stage_velocity;
+  const eh=ins.engagement_heatmap;
+  const mt=ins.market_themes;
+  const dbs=ins.deals_by_stage;
+  const avatarColors=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+
+  // 1. Pipeline Health KPI cards
+  const ddPct=ph.total_deals?Math.round(ph.dd_plus/ph.total_deals*100):0;
+  document.getElementById('health-kpis').innerHTML=`
+    <div class="kc"><div class="kl">Total Deals</div><div class="kv" data-count="${ph.total_deals}">0</div><div style="font-size:11px;color:#64748b;margin-top:4px">Active pipeline</div></div>
+    <div class="kc"><div class="kl">Gross Pipeline</div><div class="kv">${fmtR(ph.total_gross)}</div><div style="font-size:11px;color:#64748b;margin-top:4px">Sized deals only</div></div>
+    <div class="kc"><div class="kl">Weighted Pipeline</div><div class="kv" style="color:#10b981">${fmtR(ph.total_weighted)}</div><div style="font-size:11px;color:#64748b;margin-top:4px">Probability adjusted</div></div>
+    <div class="kc"><div class="kl">DD+ Deals</div><div class="kv" data-count="${ph.dd_plus}">0</div><div style="font-size:11px;color:#64748b;margin-top:4px">${ddPct}% of pipeline</div></div>
+    <div class="kc"><div class="kl">New This Period</div><div class="kv" data-count="${ph.new_deals_period}">0</div><div style="font-size:11px;color:#64748b;margin-top:4px">Added last 30 days</div></div>
+    <div class="kc"><div class="kl">On Hold / Paused</div><div class="kv" data-count="${ph.on_hold+ph.paused}">0</div><div style="font-size:11px;color:#64748b;margin-top:4px">${ph.on_hold} hold · ${ph.paused} paused</div></div>
+  `;
+  document.querySelectorAll('#health-kpis .kv[data-count]').forEach(el=>animateNumber(el,parseInt(el.dataset.count)));
+
+  // Weighted Pipeline per WM (bar chart)
+  const wbwm=ph.weighted_by_wm;
+  const wmNames=Object.keys(wbwm).sort((a,b)=>wbwm[b]-wbwm[a]);
+  Plotly.newPlot("ch-weighted-pipeline",[{
+    x:wmNames, y:wmNames.map(n=>wbwm[n]), type:'bar',
+    marker:{color:avatarColors.slice(0,wmNames.length)},
+    text:wmNames.map(n=>fmtR(wbwm[n])), textposition:'outside', textfont:{color:'#f1f5f9',size:12}
+  }],{...PL,xaxis:{...PL.xaxis,type:'category'},title:{text:'Weighted Pipeline by WM',font:{size:13,color:'#f1f5f9'},x:0.01},margin:{t:35,r:16,b:60,l:50}},CFG);
+
+  // Stage distribution (donut)
+  const stageNames=Object.keys(dbs).filter(s=>dbs[s]>0);
+  const stageVals=stageNames.map(s=>dbs[s]);
+  const stageCols=['#6366f1','#10b981','#f59e0b','#ef4444','#94a3b8','#64748b'];
+  Plotly.newPlot("ch-stage-distribution",[{
+    labels:stageNames, values:stageVals, type:'pie', hole:0.5,
+    marker:{colors:stageCols.slice(0,stageNames.length)},
+    textinfo:'label+value+percent', textfont:{color:'#e2e8f0',size:11}
+  }],{...PL,showlegend:true,title:{text:'Pipeline by Stage',font:{size:13,color:'#f1f5f9'},x:0.01},margin:{t:35,r:16,b:16,l:16}},CFG);
+
+  // 2. Deal Velocity (horizontal bar — avg days per stage)
+  const velStages=Object.keys(sv);
+  const velDays=velStages.map(s=>sv[s].avg_days);
+  const velCounts=velStages.map(s=>sv[s].count);
+  const velColors=velStages.map(s=>{const c={'Early Engagement':'#6366f1','Information Shared':'#10b981','Due Diligence':'#f59e0b','Deal Making':'#ef4444','On Hold':'#94a3b8','Paused':'#64748b'};return c[s]||'#94a3b8';});
+  Plotly.newPlot("ch-deal-velocity",[{
+    y:velStages, x:velDays, type:'bar', orientation:'h',
+    marker:{color:velColors},
+    text:velStages.map((s,i)=>`${velDays[i]} days avg · ${velCounts[i]} deals`),
+    textposition:'outside', textfont:{color:'#94a3b8',size:11}
+  }],{...PL,yaxis:{...PL.yaxis,automargin:true,type:'category'},xaxis:{...PL.xaxis,type:'linear',title:{text:'Average Days',font:{size:11,color:'#94a3b8'}},ticksuffix:'d'},
+    title:{text:'Average Deal Age by Stage',font:{size:13,color:'#f1f5f9'},x:0.01},margin:{t:35,r:120,b:40,l:140}},CFG);
+
+  // 3. Client Engagement Heatmap
+  const ehWMs=Object.keys(eh);
+  const buckets=['< 7d','7-14d','14-30d','30-60d','60d+'];
+  const heatZ=ehWMs.map(wm=>buckets.map(b=>eh[wm][b]||0));
+  const heatColors=[[0,'#1a1f2e'],[0.2,'#1a3a2a'],[0.5,'#f59e0b44'],[0.8,'#ef444466'],[1,'#ef4444']];
+  Plotly.newPlot("ch-engagement-heatmap",[{
+    z:heatZ, x:buckets, y:ehWMs, type:'heatmap',
+    colorscale:heatColors, showscale:true,
+    colorbar:{title:{text:'Clients',font:{color:'#94a3b8',size:10}},tickfont:{color:'#94a3b8'}},
+    text:heatZ.map(row=>row.map(v=>v+' clients')), texttemplate:'%{z}',
+    textfont:{color:'#f1f5f9',size:12}
+  }],{...PL,title:{text:'Client Last Interaction by WM',font:{size:13,color:'#f1f5f9'},x:0.01},
+    xaxis:{...PL.xaxis,type:'category',title:{text:'Last Contact',font:{size:11,color:'#94a3b8'}},tickangle:0},
+    yaxis:{...PL.yaxis,type:'category',automargin:true},margin:{t:35,r:80,b:50,l:140}},CFG);
+
+  // 4. Market Themes (horizontal bar + table)
+  if(mt&&mt.length){
+    const themeNames=mt.slice(0,10).map(t=>t.theme);
+    const themeCounts=mt.slice(0,10).map(t=>t.mentions);
+    Plotly.newPlot("ch-market-themes",[{
+      y:themeNames.reverse(), x:themeCounts.reverse(), type:'bar', orientation:'h',
+      marker:{color:'#6366f1'},
+      text:themeCounts.map(c=>c+' mentions'), textposition:'outside', textfont:{color:'#94a3b8',size:11}
+    }],{...PL,title:{text:'Top Sectors & Themes from Meeting Notes',font:{size:13,color:'#f1f5f9'},x:0.01},
+      yaxis:{...PL.yaxis,type:'category',automargin:true},margin:{t:35,r:100,b:30,l:180}},CFG);
+
+    // Themes table
+    let thtml='<div style="font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:12px">Sector Coverage</div>';
+    thtml+='<table><thead><tr><th>Theme</th><th class="n">Mentions</th><th>Coverage</th></tr></thead><tbody>';
+    const maxMentions=Math.max(...mt.map(t=>t.mentions));
+    mt.slice(0,10).forEach(t=>{
+      const pct=Math.round(t.mentions/maxMentions*100);
+      const barColor=pct>=60?'#10b981':pct>=30?'#f59e0b':'#6366f1';
+      thtml+=`<tr><td style="font-weight:600">${t.theme}</td><td class="n">${t.mentions}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:100px;height:6px;background:#1e2534;border-radius:3px"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px"></div></div><span style="font-size:10px;color:#64748b">${pct}%</span></div></td></tr>`;
+    });
+    thtml+='</tbody></table>';
+    document.getElementById('market-themes-table').innerHTML=thtml;
+  }
+}
+
+// Initial load — set to monthly by default
+setPreset('weekly');
+
+// Auto-refresh every 5 minutes (silently, no loading spinner)
+setInterval(()=>{
+  const s=document.getElementById("f-start").value;
+  const e=document.getElementById("f-end").value;
+  const wm=document.getElementById("f-wm").value;
+  let url="/api/data?start="+s+"&end="+e;
+  if(wm) url+="&wm="+wm;
+  fetch(url).then(r=>r.json()).then(d=>{
+    render(d);
+    console.log('Auto-refreshed at',new Date().toLocaleTimeString());
+  }).catch(()=>{});
+}, 300000); // 5 minutes
+
+</script>
+</body>
+</html>
