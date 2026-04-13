@@ -15,14 +15,14 @@ def get_config(config_path=None):
 
 def get_connection(config_path=None):
     # Use environment variables if available (Railway), else fall back to config file
-    host = os.environ.get("REDSHIFT_HOST")
+    host = os.environ.get("REDSHIFT_HOST", "").strip()
     if host:
         return redshift_connector.connect(
             host=host,
-            port=int(os.environ.get("REDSHIFT_PORT", "5439")),
-            database=os.environ.get("REDSHIFT_DB", "dwh"),
-            user=os.environ.get("REDSHIFT_USER"),
-            password=os.environ.get("REDSHIFT_PASSWORD"),
+            port=int(os.environ.get("REDSHIFT_PORT", "5439").strip()),
+            database=os.environ.get("REDSHIFT_DB", "dwh").strip(),
+            user=os.environ.get("REDSHIFT_USER", "").strip(),
+            password=os.environ.get("REDSHIFT_PASSWORD", "").strip(),
         )
     else:
         cfg = get_config(config_path)
