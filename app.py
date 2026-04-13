@@ -1207,6 +1207,28 @@ def index():
     return render_template("dashboard.html", start_date=start, end_date=end)
 
 
+@app.route("/api/debug")
+def api_debug():
+    """Debug endpoint to test Redshift queries."""
+    conn = get_connection()
+    try:
+        import os
+        ids = ALL_IDS
+        df1 = pd.read_sql(f"SELECT assigned_to AS uid, COUNT(*) AS cnt FROM propforce_sa.propforce_sa__zn_pf_task WHERE assigned_to IN ({ids}) AND date_added::date BETWEEN '2026-04-01' AND '2026-04-13' GROUP BY assigned_to", conn)
+        df2 = pd.read_sql(f"SELECT userid AS uid, COUNT(*) AS cnt FROM propforce_sa.propforce_sa__zn_internal_inquiries WHERE userid IN ({ids}) AND (operation_type IS NULL OR operation_type != 'delete') AND time_added::date BETWEEN '2026-04-01' AND '2026-04-13' GROUP BY userid", conn)
+        return jsonify({
+            "env_host": os.environ.get("REDSHIFT_HOST", "NOT SET"),
+            "ids": ids,
+            "tasks": df1.to_dict(orient="records"),
+            "leads": df2.to_dict(orient="records"),
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+    finally:
+        conn.close()
+
+
 @app.route("/api/wm_list")
 def api_wm_list():
     return jsonify([
