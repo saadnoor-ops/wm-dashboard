@@ -4,7 +4,10 @@ warnings.filterwarnings("ignore")
 from flask import Flask, render_template, request, jsonify
 from redshift_client import get_connection
 import pandas as pd
-from datetime import datetime, timedelta
+import re
+import os
+import traceback
+from datetime import datetime, timedelta, date as date_type
 import threading
 import time as _time
 import json as _json
@@ -336,7 +339,8 @@ def fetch_all(ids, start, end):
     # Run queries — parallel locally, sequential on Railway (fewer connections)
     import os
     results = {}
-    if os.environ.get("RAILWAY_ENVIRONMENT"):
+    # Use sequential on Railway (detect by REDSHIFT_HOST env var = deployed)
+    if os.environ.get("REDSHIFT_HOST"):
         # Sequential on Railway to avoid connection pool issues
         conn = get_connection()
         for name, sql in sqls.items():
@@ -790,7 +794,6 @@ def build_response(dfs, wm_users, name_map):
                     "Due Diligence": "#f59e0b", "Deal Making": "#ef4444",
                     "On Hold": "#94a3b8", "Paused": "#64748b"}
 
-    import re
 
     def generate_ai_summary(text):
         """Generate a 2-line summary by extracting key info from meeting notes."""
@@ -1030,7 +1033,7 @@ def build_response(dfs, wm_users, name_map):
             stage, prob, next_step, est_value = analyze_client_in_notes(cn_str, wm, base_stage)
 
             # Deal age in days
-            from datetime import date as date_type
+
             added_date = row["time_added"].date() if pd.notna(row.get("time_added")) else None
             updated_date = row["time_updated"].date() if pd.notna(row.get("time_updated")) else None
             today = date_type.today()
@@ -1093,10 +1096,10 @@ def build_response(dfs, wm_users, name_map):
             last_update=("time_updated", "max")
         ).reset_index()
         ce = ce.sort_values("last_update", ascending=False)
-        from datetime import date as dt_date
+
         for _, row in ce.head(50).iterrows():
             lu = row["last_update"]
-            days_ago = (dt_date.today() - lu.date()).days if pd.notna(lu) else 999
+            days_ago = (date_type.today() - lu.date()).days if pd.notna(lu) else 999
             bucket = "< 7d" if days_ago < 7 else "7-14d" if days_ago < 14 else "14-30d" if days_ago < 30 else "30-60d" if days_ago < 60 else "60d+"
             client_engagement.append({
                 "user_name": row["user_name"],
@@ -1242,7 +1245,6 @@ def api_data():
         set_cached(cache_key, result)
         return jsonify(result)
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
