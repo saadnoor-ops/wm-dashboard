@@ -1209,24 +1209,28 @@ def index():
 
 @app.route("/api/debug")
 def api_debug():
-    """Debug endpoint to test Redshift queries."""
-    conn = get_connection()
+    """Debug endpoint to test Redshift connection."""
+    import os
+    env_info = {
+        "REDSHIFT_HOST": os.environ.get("REDSHIFT_HOST", "NOT SET"),
+        "REDSHIFT_PORT": os.environ.get("REDSHIFT_PORT", "NOT SET"),
+        "REDSHIFT_DB": os.environ.get("REDSHIFT_DB", "NOT SET"),
+        "REDSHIFT_USER": os.environ.get("REDSHIFT_USER", "NOT SET"),
+        "REDSHIFT_PASSWORD_LEN": len(os.environ.get("REDSHIFT_PASSWORD", "")),
+        "REDSHIFT_PASSWORD_FIRST3": os.environ.get("REDSHIFT_PASSWORD", "")[:3],
+    }
     try:
-        import os
-        ids = ALL_IDS
-        df1 = pd.read_sql(f"SELECT assigned_to AS uid, COUNT(*) AS cnt FROM propforce_sa.propforce_sa__zn_pf_task WHERE assigned_to IN ({ids}) AND date_added::date BETWEEN '2026-04-01' AND '2026-04-13' GROUP BY assigned_to", conn)
-        df2 = pd.read_sql(f"SELECT userid AS uid, COUNT(*) AS cnt FROM propforce_sa.propforce_sa__zn_internal_inquiries WHERE userid IN ({ids}) AND (operation_type IS NULL OR operation_type != 'delete') AND time_added::date BETWEEN '2026-04-01' AND '2026-04-13' GROUP BY userid", conn)
-        return jsonify({
-            "env_host": os.environ.get("REDSHIFT_HOST", "NOT SET"),
-            "ids": ids,
-            "tasks": df1.to_dict(orient="records"),
-            "leads": df2.to_dict(orient="records"),
-        })
+        conn = get_connection()
+        df = pd.read_sql("SELECT 1 AS test", conn)
+        conn.close()
+        env_info["connection"] = "SUCCESS"
+        env_info["test_query"] = df.to_dict(orient="records")
     except Exception as e:
         import traceback
-        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
-    finally:
-        conn.close()
+        env_info["connection"] = "FAILED"
+        env_info["error"] = str(e)
+        env_info["trace"] = traceback.format_exc()
+    return jsonify(env_info)
 
 
 @app.route("/api/wm_list")
