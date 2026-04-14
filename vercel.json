@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/wm_dashboard.html" }
+    { "source": "/", "destination": "/index.html" }
   ]
 }
