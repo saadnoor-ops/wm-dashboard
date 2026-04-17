@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<script src="data.js"></script>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<script src="data.js"></script><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>WM Performance Dashboard</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
@@ -509,7 +508,11 @@ footer{text-align:center;padding:18px;font-size:11px;color:var(--text-muted);bor
     </div>
   </div>
   <div class="theme-controls">
-    
+    <div class="user-badge" id="user-badge-el" style="display:none">
+      <span class="user-avatar" id="user-avatar-el"></span>
+      <span class="user-name-text" id="user-name-el"></span>
+      <a href="/logout" class="logout-link" title="Sign out">&#x2192;</a>
+    </div>
     <button class="theme-btn" onclick="toggleEditMode()" id="edit-toggle" title="Edit mode">&#9998;</button>
     <button class="theme-btn" onclick="toggleTheme()" id="theme-toggle" title="Day/Night mode">&#9790;</button>
     <button class="theme-btn" onclick="openImportModal()" id="import-btn" title="Import data">&#8682;</button>
@@ -568,7 +571,7 @@ footer{text-align:center;padding:18px;font-size:11px;color:var(--text-muted);bor
 <!-- LAYOUT: SIDEBAR + MAIN -->
 <div class="app-layout">
   <!-- LEFT SIDEBAR — WM Filter -->
-  <div class="sidebar" id="sidebar" >
+  <div class="sidebar" id="sidebar">
     <button class="sidebar-toggle" onclick="toggleSidebar()" title="Collapse/Expand">&#9776;</button>
     <div class="sidebar-title">Wealth Managers</div>
     <div class="sidebar-wm-list" id="sidebar-wm-list">
@@ -2136,6 +2139,21 @@ function renderInsights(D){
 }
 
 // Initial load — set to monthly by default
+// Flask context injection (only works on localhost, ignored on static)
+try{
+  var _userName = "";
+  var _userRole = "";
+  var _userWmId = "";
+  if(_userName){
+    document.getElementById('user-badge-el').style.display='flex';
+    document.getElementById('user-avatar-el').textContent=_userName.substring(0,2).toUpperCase();
+    document.getElementById('user-name-el').textContent=_userName;
+  }
+  if(_userWmId){
+    document.getElementById('sidebar').style.display='none';
+  }
+}catch(e){}
+
 setPreset('weekly');
 
 // Auto-refresh every 5 minutes (silently, no loading spinner)
