@@ -535,8 +535,9 @@ footer{text-align:center;padding:18px;font-size:11px;color:var(--text-muted);bor
 
 /* ── Bayut design-spec overrides (items 3, 4, 5) ───────────────────────── */
 header{background:linear-gradient(135deg,var(--bayut-dark),var(--bayut-green));box-shadow:0 2px 8px rgba(0,80,40,.15)}
-header h1,body.light header h1{color:#ffffff}
-header p{color:rgba(255,255,255,.85)}
+body.light.theme-bayut header{background:linear-gradient(135deg,var(--bayut-dark),var(--bayut-green))}
+header h1,body.light header h1,body.light.theme-bayut header h1{color:#ffffff}
+header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,255,.85)}
 .card,.summary-card,.wm-card,.kc,.modal-box,.drill-box,.notif-panel,.import-drop,.preset,.btn,.top-tab{border-radius:14px}
 .logo-badge,.btn,.preset.active,.top-tab.active{background:var(--bayut-green)!important;color:#fff!important;border-color:transparent!important}
 .btn:hover{filter:brightness(1.08)}
