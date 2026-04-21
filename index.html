@@ -167,6 +167,29 @@ body.light .cell-tooltip{background:var(--bg-card);border-color:var(--border);co
 .summary-card .sc-prog-fill{height:100%;border-radius:3px}
 .summary-card .sc-prog-val{width:24px;font-weight:600;color:#e2e8f0}
 body.light .summary-card{background:var(--bg-card);border-color:var(--border)}
+/* Section 3.4: KPI strip gradient + 3px top accent bar */
+body.light .summary-card{background:linear-gradient(135deg,#ffffff 0%,var(--g6) 100%)}
+body.light .summary-card::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--bayut-green);border-radius:14px 14px 0 0}
+body.light .summary-card:nth-child(2)::before{background:var(--orange)}
+body.light .summary-card:nth-child(3)::before{background:var(--blue)}
+body.light .summary-card:nth-child(4)::before{background:var(--g2)}
+body.light .summary-card:nth-child(5)::before{background:var(--purple)}
+body.light .summary-card .sc-label{color:var(--muted)}
+body.light .summary-card .sc-value{color:var(--text-heading)}
+body.light .summary-card:hover{border-color:var(--bayut-green);box-shadow:0 4px 12px rgba(13,122,63,.12)}
+/* Section 3.5: Filter inputs use --surface2 in light mode */
+body.light .filter-inputs input[type=date],body.light .filter-inputs select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;height:30px;font-size:.72rem}
+body.light .filters input[type=date],body.light .filters select{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+/* Section 3.6: Table column headers — bayut-green uppercase on surface2 */
+body.light table thead th{background:var(--g6);color:var(--bayut-green);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:.66rem;border-bottom:2px solid var(--g3);padding:9px 10px}
+body.light table tbody td{padding:7px 10px;font-size:.76rem}
+body.light table tbody tr:hover{background:var(--g6)}
+/* Section 2.6: Conditional formatting bands */
+.cf-red{background:rgba(220,38,38,.12) !important;color:#dc2626 !important;font-weight:700}
+.cf-orange{background:rgba(234,88,12,.12) !important;color:#ea580c !important;font-weight:700}
+.cf-yellow{background:rgba(202,138,4,.14) !important;color:#ca8a04 !important;font-weight:700}
+.cf-lgreen{background:rgba(22,163,74,.12) !important;color:#16a34a !important;font-weight:700}
+.cf-dgreen{background:rgba(21,128,61,.16) !important;color:#15803d !important;font-weight:700}
 
 /* Sparklines */
 .sparkline{display:inline-block;vertical-align:middle;margin-left:0}
@@ -936,6 +959,19 @@ const C=["#6366f1","#f59e0b","#10b981","#3b82f6","#ec4899","#14b8a6","#a855f7","
 const CFG={responsive:true,displayModeBar:false};
 const fmt=n=>Number(n).toLocaleString();
 const fmtR=n=>{if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return fmt(n)};
+// Section 2.6: Conditional-formatting band class for a value given a series + optional floor.
+function cfClass(val,series,floor){
+  if(val===null||val===undefined||isNaN(val))return '';
+  if(floor!==undefined&&val<floor)return 'cf-red';
+  const s=(series||[]).filter(v=>v!==null&&v!==undefined&&!isNaN(v)).slice().sort((a,b)=>a-b);
+  if(s.length<2)return '';
+  const q=(p)=>s[Math.min(s.length-1,Math.floor(p*(s.length-1)))];
+  const q1=q(0.25),med=q(0.5),q3=q(0.75);
+  if(val<q1)return 'cf-orange';
+  if(val<med)return 'cf-yellow';
+  if(val<q3)return 'cf-lgreen';
+  return 'cf-dgreen';
+}
 
 // Load WM list for dropdown + sidebar
 const avatarColorsGlobal=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
@@ -1682,12 +1718,24 @@ function render(D){
       const ovMap={};D.overview.forEach(r=>ovMap[r.name]=r);
       const sp=D.sparklines||{};
       kd.sort((a,b)=>(ovMap[b.name]||{}).leads_worked_on-(ovMap[a.name]||{}).leads_worked_on||0);
+      // Pre-compute per-column series for conditional-formatting bands (Section 2.6)
+      const cfSeries={
+        leads_added: kd.map(r=>(ovMap[r.name]||{}).leads_added||0),
+        leads_worked_on: kd.map(r=>(ovMap[r.name]||{}).leads_worked_on||0),
+        qualified_calls: kd.map(r=>r.qualified_calls||0),
+        unique_meetings: kd.map(r=>(ovMap[r.name]||{}).unique_meetings||0),
+        ib_shared: kd.map(r=>r.ib_shared||0),
+        is_shared: kd.map(r=>r.is_shared||0),
+        im_shared: kd.map(r=>r.im_shared||0),
+        deals_closed: kd.map(r=>r.deals_closed||0),
+      };
       const tbody=kd.map(r=>{const ov=ovMap[r.name]||{};
+        const v={leads_added:ov.leads_added||0,leads_worked_on:ov.leads_worked_on||0,qualified_calls:r.qualified_calls||0,unique_meetings:ov.unique_meetings||0,ib_shared:r.ib_shared||0,is_shared:r.is_shared||0,im_shared:r.im_shared||0,deals_closed:r.deals_closed||0};
         return `<tr>
           <td>${r.name}</td>
-          <td class="nb clickable" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(ov.leads_added||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(ov.leads_worked_on||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','qualified_calls')" onmouseenter="showTooltip(this,'Calls with 60s+ talk time')" onmouseleave="hideTooltip()">${fmt(r.qualified_calls||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','unique_meetings')" onmouseenter="showTooltip(this,'Unique client meetings (1 per lead)')" onmouseleave="hideTooltip()">${fmt(ov.unique_meetings||0)}</td>
-          <td class="n">${fmt(r.ib_shared)}</td><td class="n">${fmt(r.is_shared)}</td><td class="n">${fmt(r.im_shared)}</td>
-          <td class="nb">${fmt(r.deals_closed)}</td><td class="nb">${fmtR(r.revenue)}</td>
+          <td class="nb clickable ${cfClass(v.leads_added,cfSeries.leads_added,1)}" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(v.leads_added)}</td><td class="nb clickable ${cfClass(v.leads_worked_on,cfSeries.leads_worked_on,1)}" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(v.leads_worked_on)}</td><td class="nb clickable ${cfClass(v.qualified_calls,cfSeries.qualified_calls,1)}" onclick="drillMetric('${r.name}','qualified_calls')" onmouseenter="showTooltip(this,'Calls with 60s+ talk time')" onmouseleave="hideTooltip()">${fmt(v.qualified_calls)}</td><td class="nb clickable ${cfClass(v.unique_meetings,cfSeries.unique_meetings,1)}" onclick="drillMetric('${r.name}','unique_meetings')" onmouseenter="showTooltip(this,'Unique client meetings (1 per lead)')" onmouseleave="hideTooltip()">${fmt(v.unique_meetings)}</td>
+          <td class="n ${cfClass(v.ib_shared,cfSeries.ib_shared,1)}">${fmt(v.ib_shared)}</td><td class="n ${cfClass(v.is_shared,cfSeries.is_shared,1)}">${fmt(v.is_shared)}</td><td class="n ${cfClass(v.im_shared,cfSeries.im_shared,1)}">${fmt(v.im_shared)}</td>
+          <td class="nb ${cfClass(v.deals_closed,cfSeries.deals_closed,1)}">${fmt(v.deals_closed)}</td><td class="nb">${fmtR(r.revenue)}</td>
         </tr>`;}).join("");
       const len=kd.length;
       const sum=(key)=>kd.reduce((a,r)=>a+(r[key]||0),0);
