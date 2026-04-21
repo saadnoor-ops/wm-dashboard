@@ -520,6 +520,12 @@ body.light .ageing-card .ac-avatar{background:var(--border);color:var(--text-mut
 body.light .note-card{background:var(--bg-card);border-color:var(--border)}
 body.light .note-card .note-name{color:var(--text-heading)}
 body.light .note-card .note-body{color:var(--text)}
+/* Notification panel — light-mode overrides */
+body.light .notif-panel{background:var(--bg-card);border-color:var(--border);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+body.light .notif-header{color:var(--text-heading);border-bottom-color:var(--border)}
+body.light .notif-item:hover{background:var(--surface2)}
+body.light .notif-item .notif-text{color:var(--text)}
+body.light .notif-item .notif-time{color:var(--text-muted)}
 body.light .pip-chip{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
 body.light .stage-btn{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
 body.light .drill-box{background:var(--bg-card);border-color:var(--border)}
@@ -1993,7 +1999,7 @@ function filterNotes(){
         <div><div class="note-name">${n.user_name}</div></div>
         <div class="note-date">${n.date}</div></div>
       <div class="note-title">${esc(n.title)}</div>
-      ${n.ai_summary?`<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;line-height:1.5"><span style="color:#818cf8;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px">AI Summary</span><br><span style="color:#e2e8f0">${esc(n.ai_summary)}</span></div>`:''}
+      ${n.ai_summary?`<div style="background:rgba(13,122,63,.08);border:1px solid rgba(13,122,63,.2);border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;line-height:1.5"><span style="color:var(--bayut-green);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px">AI Summary</span><br><span style="color:var(--text)">${esc(n.ai_summary)}</span></div>`:''}
       <div class="note-body" id="note-body-${i}">${esc(n.notes)}</div>
       ${n.notes.length>200?`<div class="note-toggle" onclick="toggleNote(${i})">Show more</div>`:''}
     </div>`;
