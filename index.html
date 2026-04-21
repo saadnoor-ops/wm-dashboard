@@ -1557,9 +1557,17 @@ function loadData(){
   });
 }
 
-function tbl(id,headers,rows,footRow){
+// cfCols: optional array of 0-based column indices that should get conditional-formatting bands.
+function tbl(id,headers,rows,footRow,cfCols){
+  const cfSeries={};
+  const parseNum=v=>typeof v==='number'?v:(parseFloat(String(v==null?'':v).replace(/[,%\$]/g,''))||0);
+  if(cfCols&&cfCols.length){cfCols.forEach(ci=>{cfSeries[ci]=rows.map(r=>parseNum(r[ci]));});}
   const th="<thead><tr>"+headers.map(h=>`<th class="${h[1]||''}">${h[0]}</th>`).join("")+"</tr></thead>";
-  const tb="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td class="${headers[i][1]||''}">${c}</td>`).join("")+"</tr>").join("")+"</tbody>";
+  const tb="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>{
+    let cls=headers[i][1]||'';
+    if(cfSeries[i]){const band=cfClass(parseNum(c),cfSeries[i],1);if(band)cls+=(cls?' ':'')+band;}
+    return `<td class="${cls}">${c}</td>`;
+  }).join("")+"</tr>").join("")+"</tbody>";
   const tf=footRow?"<tfoot><tr>"+footRow.map((c,i)=>`<td class="${i===0?'':'nb'}">${c}</td>`).join("")+"</tr></tfoot>":"";
   document.getElementById(id).innerHTML=th+tb+tf;
 }
@@ -1576,13 +1584,14 @@ function render(D){
   {
     const ov=D.overview;
     const thead=`<thead><tr><th>Name</th><th class="n">PF Logins</th><th class="n">Morning Sched</th><th class="n">Morning Att</th></tr></thead>`;
+    const ovS={pf_logins:ov.map(r=>r.pf_logins||0),morning_scheduled:ov.map(r=>r.morning_scheduled||0),morning_attended:ov.map(r=>r.morning_attended||0)};
     const tbody=ov.map(r=>{
       const n=r.name.replace(/'/g,"\\'");
       return `<tr>
         <td style="font-weight:600">${r.name}</td>
-        <td class="n clickable" onclick="drillMetric('${n}','pf_logins')" onmouseenter="showTooltip(this,'Unique login days')" onmouseleave="hideTooltip()">${fmt(r.pf_logins)}</td>
-        <td class="n">${fmt(r.morning_scheduled)}</td>
-        <td class="n">${fmt(r.morning_attended)}</td>
+        <td class="n clickable ${cfClass(r.pf_logins||0,ovS.pf_logins,1)}" onclick="drillMetric('${n}','pf_logins')" onmouseenter="showTooltip(this,'Unique login days')" onmouseleave="hideTooltip()">${fmt(r.pf_logins)}</td>
+        <td class="n ${cfClass(r.morning_scheduled||0,ovS.morning_scheduled,1)}">${fmt(r.morning_scheduled)}</td>
+        <td class="n ${cfClass(r.morning_attended||0,ovS.morning_attended,1)}">${fmt(r.morning_attended)}</td>
       </tr>`;
     }).join('');
     const oLen=ov.length||1;
@@ -1774,7 +1783,7 @@ function render(D){
       const len=pk.length;
       const avg=(key)=>len?Math.round(pk.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
       const foot=["TEAM AVG",avg('calls_per_meeting')||'-',avg('meetings_per_proposal')||'-',avg('proposals_per_deal')||'-'];
-      tbl("t-productivity",h,rows,foot);
+      tbl("t-productivity",h,rows,foot,[1,2,3]);
     }
   }
 
@@ -1797,11 +1806,13 @@ function render(D){
         <th class="n">IB\u2192IS %</th><th class="n">IS\u2192IM %</th><th class="n">IM\u2192Close %</th>
       </tr>`;
       const rateClass=(v)=>v>=80?'cell-green':v>=50?'cell-yellow':v>0?'cell-red':'';
+      // Conditional-formatting bands for raw counts (keep rateClass for % cells)
+      const ckS={ib_shared:ck.map(r=>r.ib_shared||0),ib_accepted:ck.map(r=>r.ib_accepted||0),is_shared:ck.map(r=>r.is_shared||0),is_accepted:ck.map(r=>r.is_accepted||0),im_shared:ck.map(r=>r.im_shared||0),im_accepted:ck.map(r=>r.im_accepted||0)};
       const tbody=ck.map(r=>`<tr>
         <td>${r.name}</td>
-        <td class="n">${fmt(r.ib_shared)}</td><td class="n">${fmt(r.ib_accepted)}</td><td class="n ${rateClass(r.ib_acceptance_rate)}">${r.ib_acceptance_rate}%</td>
-        <td class="n">${fmt(r.is_shared)}</td><td class="n">${fmt(r.is_accepted)}</td><td class="n ${rateClass(r.is_acceptance_rate)}">${r.is_acceptance_rate}%</td>
-        <td class="n">${fmt(r.im_shared)}</td><td class="n">${fmt(r.im_accepted)}</td><td class="n ${rateClass(r.im_acceptance_rate)}">${r.im_acceptance_rate}%</td>
+        <td class="n ${cfClass(r.ib_shared||0,ckS.ib_shared,1)}">${fmt(r.ib_shared)}</td><td class="n ${cfClass(r.ib_accepted||0,ckS.ib_accepted,1)}">${fmt(r.ib_accepted)}</td><td class="n ${rateClass(r.ib_acceptance_rate)}">${r.ib_acceptance_rate}%</td>
+        <td class="n ${cfClass(r.is_shared||0,ckS.is_shared,1)}">${fmt(r.is_shared)}</td><td class="n ${cfClass(r.is_accepted||0,ckS.is_accepted,1)}">${fmt(r.is_accepted)}</td><td class="n ${rateClass(r.is_acceptance_rate)}">${r.is_acceptance_rate}%</td>
+        <td class="n ${cfClass(r.im_shared||0,ckS.im_shared,1)}">${fmt(r.im_shared)}</td><td class="n ${cfClass(r.im_accepted||0,ckS.im_accepted,1)}">${fmt(r.im_accepted)}</td><td class="n ${rateClass(r.im_acceptance_rate)}">${r.im_acceptance_rate}%</td>
         <td class="n ${rateClass(r.ib_to_is_rate)}">${r.ib_to_is_rate}%</td><td class="n ${rateClass(r.is_to_im_rate)}">${r.is_to_im_rate}%</td><td class="n ${rateClass(r.im_to_closure_rate)}">${r.im_to_closure_rate}%</td>
       </tr>`).join("");
       const len=ck.length;
@@ -1832,8 +1843,15 @@ function render(D){
     const h=[["Name",""],["Total Tasks","nb"]].concat(cols.map(c=>[c,"n"]));
     const rows=tk.map(r=>[r.name,fmt(r.total)].concat(cols.map(c=>fmt(r[c]||0))));
     const tLen=tk.length||1;
+    // Conditional-formatting series for Total + each task-type column
+    const tkCfSeries={1:tk.map(r=>r.total||0)};
+    cols.forEach((c,ci)=>{tkCfSeries[ci+2]=tk.map(r=>r[c]||0);});
     const thead2="<thead><tr>"+h.map(x=>`<th class="${x[1]||''}">${x[0]}</th>`).join("")+"</tr></thead>";
-    const tbody2="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td class="${h[i][1]||''}">${c}</td>`).join("")+"</tr>").join("")+"</tbody>";
+    const tbody2="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>{
+      let cls=h[i][1]||'';
+      if(tkCfSeries[i]){const n=parseFloat(String(c).replace(/,/g,''))||0;const band=cfClass(n,tkCfSeries[i],1);if(band)cls+=(cls?' ':'')+band;}
+      return `<td class="${cls}">${c}</td>`;
+    }).join("")+"</tr>").join("")+"</tbody>";
     const tfoot2=`<tfoot>
       <tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)"><td>TOTAL</td><td class="nb">${fmt(sc(tk,"total"))}</td>${cols.map(c=>`<td class="nb">${fmt(tk.reduce((a,r)=>a+(r[c]||0),0))}</td>`).join("")}</tr>
       <tr style="font-weight:600;color:#fbbf24;font-size:11px"><td>TEAM AVG</td><td class="n">${Math.round(sc(tk,"total")/tLen*10)/10}</td>${cols.map(c=>`<td class="n">${Math.round(tk.reduce((a,r)=>a+(r[c]||0),0)/tLen*10)/10}</td>`).join("")}</tr>
@@ -1847,7 +1865,7 @@ function render(D){
     const h=[["Name",""]].concat(cols.map(c=>[c,"n"]));
     const rows=ps.map(r=>[r.name].concat(cols.map(c=>fmt(r[c]||0))));
     const tot=["TOTAL"].concat(cols.map(c=>fmt(ps.reduce((a,r)=>a+(r[c]||0),0))));
-    tbl("t-presales",h,rows,tot);
+    tbl("t-presales",h,rows,tot,cols.map((_,i)=>i+1));
   }
 
   // Funnel
@@ -1856,7 +1874,7 @@ function render(D){
     const h=[["Name",""],["Inquiry","n"],["Prospect","n"],["Mature","n"],["Pre-closure","n"],["Sold","n"],["Closed Lost","n"],["Mature Rev","n"],["Pre-clo Rev","n"],["Sold Rev","n"]];
     const rows=fn.map(r=>[r.user_name,fmt(r.inquiries),fmt(r.prospects),fmt(r.mature),fmt(r.preclosure),fmt(r.sold),fmt(r.closedlost),fmtR(r.mature_rev),fmtR(r.preclosure_rev),fmtR(r.sold_rev)]);
     const t=fn.reduce((a,r)=>({i:a.i+r.inquiries,p:a.p+r.prospects,m:a.m+r.mature,pc:a.pc+r.preclosure,s:a.s+r.sold,cl:a.cl+r.closedlost,mr:a.mr+r.mature_rev,pr:a.pr+r.preclosure_rev,sr:a.sr+r.sold_rev}),{i:0,p:0,m:0,pc:0,s:0,cl:0,mr:0,pr:0,sr:0});
-    tbl("t-funnel",h,rows,["TOTAL",fmt(t.i),fmt(t.p),fmt(t.m),fmt(t.pc),fmt(t.s),fmt(t.cl),fmtR(t.mr),fmtR(t.pr),fmtR(t.sr)]);
+    tbl("t-funnel",h,rows,["TOTAL",fmt(t.i),fmt(t.p),fmt(t.m),fmt(t.pc),fmt(t.s),fmt(t.cl),fmtR(t.mr),fmtR(t.pr),fmtR(t.sr)],[1,2,3,4,5,6,7,8,9]);
   }
 
   // Login charts
