@@ -744,6 +744,13 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
       <div class="card"><div id="ch-meetings-trend" style="height:300px"></div></div>
     </div>
 
+    <!-- PRE-SALES CONVERSION -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#ec4899"></span>Pre-Sales Conversion</div>
+      <div class="sec-sub">IB &rarr; IS &rarr; IM &rarr; Deal conversion funnel</div>
+      <div class="card"><div class="tw"><table id="t-conversion"></table></div></div>
+    </div>
+
     <!-- PRODUCTIVITY KPI (collapsible) -->
     <div class="sec">
       <div class="sec-title collapsible" onclick="toggleSection('productivity-body')"><span class="d" style="background:#14b8a6"></span>Productivity KPI <span class="collapse-icon" id="productivity-body-icon">&#9654;</span></div>
@@ -751,13 +758,6 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
       <div class="collapse-body" id="productivity-body" style="display:none">
         <div class="card"><div class="tw"><table id="t-productivity"></table></div></div>
       </div>
-    </div>
-
-    <!-- PRE-SALES CONVERSION -->
-    <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#ec4899"></span>Pre-Sales Conversion</div>
-      <div class="sec-sub">IB &rarr; IS &rarr; IM &rarr; Deal conversion funnel</div>
-      <div class="card"><div class="tw"><table id="t-conversion"></table></div></div>
     </div>
 
 
@@ -1062,6 +1062,11 @@ function renderDigest(D){
 function renderSummaryCards(D){
   const ov=D.overview||[];const kd=D.kpi_dashboard||[];const sp=D.sparklines||{};
   const cols=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  // Stable per-WM color map — same WM keeps the same color across every summary tile.
+  const wmColor={};
+  ov.forEach((r,i)=>{wmColor[r.name]=cols[i%cols.length];});
+  kd.forEach(r=>{if(!wmColor[r.name])wmColor[r.name]=cols[Object.keys(wmColor).length%cols.length];});
+  const colorOf=name=>wmColor[name]||cols[0];
   const totalLeads=ov.reduce((a,r)=>a+(r.leads_added||0),0);
   const totalWorkedOn=ov.reduce((a,r)=>a+(r.leads_worked_on||0),0);
   const totalMtgs=kd.reduce((a,r)=>a+(r.meetings_conducted||0),0);
@@ -1085,9 +1090,9 @@ function renderSummaryCards(D){
   function miniStackedBar(data, total){
     if(!data.length||!total)return '<div style="height:8px;background:#1e2534;border-radius:4px"></div>';
     let bar='<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:6px">';
-    data.forEach((d,i)=>{const pct=Math.round(d.val/total*100);bar+=`<div style="width:${pct}%;background:${cols[i%cols.length]}" title="${d.name}: ${d.val}"></div>`;});
+    data.forEach(d=>{const pct=Math.round(d.val/total*100);bar+=`<div style="width:${pct}%;background:${colorOf(d.name)}" title="${d.name}: ${d.val}"></div>`;});
     bar+='</div>';
-    const legend=data.map((d,i)=>`<span style="font-size:9px;color:var(--text-muted)"><span class="sc-legend-dot" style="background:${cols[i%cols.length]}"></span>${d.name.split(' ')[0]}: ${d.val}</span>`).join(' ');
+    const legend=data.map(d=>`<span style="font-size:9px;color:var(--text-muted)"><span class="sc-legend-dot" style="background:${colorOf(d.name)}"></span>${d.name.split(' ')[0]}: ${d.val}</span>`).join(' ');
     return bar+legend;
   }
 
