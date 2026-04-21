@@ -190,9 +190,9 @@ body.light table tbody tr:hover{background:var(--g6)}
 .cf-yellow{background:rgba(202,138,4,.14) !important;color:#ca8a04 !important;font-weight:700}
 .cf-lgreen{background:rgba(22,163,74,.12) !important;color:#16a34a !important;font-weight:700}
 .cf-dgreen{background:rgba(21,128,61,.16) !important;color:#15803d !important;font-weight:700}
-/* Name column — visually separate from banded numeric columns to its right */
+/* Name column — distinct from banded numeric columns via a thicker divider only (no bg tint) */
 body.light table tbody td:first-child{font-weight:600;color:var(--bayut-dark);background:var(--surface);border-right:2px solid var(--border)}
-body.light table thead th:first-child{border-right:2px solid var(--g3);background:var(--g6)}
+body.light table thead th:first-child{border-right:2px solid var(--g3)}
 
 /* Sparklines */
 .sparkline{display:inline-block;vertical-align:middle;margin-left:0}
@@ -723,9 +723,9 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
     <div class="sec">
       <div class="sec-title"><span class="d" style="background:#6366f1"></span>WM Activity</div>
       <div class="sec-sub">Tasks breakdown &middot; Logins &middot; Morning meetings</div>
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
-        <div class="card"><div class="tw"><table id="t-tasks"></table></div></div>
-        <div class="card"><div class="tw"><table id="t-overview"></table></div></div>
+      <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start">
+        <div class="card" style="min-width:0"><div class="tw"><table id="t-tasks"></table></div></div>
+        <div class="card" style="min-width:0"><div class="tw"><table id="t-overview"></table></div></div>
       </div>
     </div>
 
