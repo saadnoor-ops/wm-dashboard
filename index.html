@@ -190,9 +190,10 @@ body.light table tbody tr:hover{background:var(--g6)}
 .cf-yellow{background:rgba(202,138,4,.14) !important;color:#ca8a04 !important;font-weight:700}
 .cf-lgreen{background:rgba(22,163,74,.12) !important;color:#16a34a !important;font-weight:700}
 .cf-dgreen{background:rgba(21,128,61,.16) !important;color:#15803d !important;font-weight:700}
-/* Name column — distinct from banded numeric columns via a thicker divider only (no bg tint) */
-body.light table tbody td:first-child{font-weight:600;color:var(--bayut-dark);background:var(--surface);border-right:2px solid var(--border)}
-body.light table thead th:first-child{border-right:2px solid var(--g3)}
+/* Name column — bold brand-dark text, no divider line */
+body.light table tbody td:first-child{font-weight:600;color:var(--bayut-dark);background:var(--surface);white-space:nowrap;min-width:170px}
+body.light table thead th:first-child{white-space:nowrap;min-width:170px}
+body.light table tfoot td:first-child{white-space:nowrap;min-width:170px}
 
 /* Sparklines */
 .sparkline{display:inline-block;vertical-align:middle;margin-left:0}
@@ -702,13 +703,6 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
     <!-- SUMMARY KPI CARDS WITH MINI CHARTS -->
     <div class="summary-grid" id="summary-cards"></div>
 
-    <!-- WM PROFILE CARDS -->
-    <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Wealth Manager Profiles</div>
-      <div class="sec-sub">Individual performance snapshot for each wealth manager</div>
-      <div class="wm-profiles" id="wm-profiles"></div>
-    </div>
-
     <!-- WM OVERVIEW (was KPI Dashboard) -->
     <div class="sec">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
@@ -717,6 +711,13 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
         <div class="export-bar"><button class="export-btn" onclick="exportTable('t-kpi','WM_Overview')">&#128196; CSV</button></div>
       </div>
       <div class="card"><div class="tw"><table id="t-kpi"></table></div></div>
+    </div>
+
+    <!-- WM PROFILE CARDS -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Wealth Manager Profiles</div>
+      <div class="sec-sub">Individual performance snapshot for each wealth manager</div>
+      <div class="wm-profiles" id="wm-profiles"></div>
     </div>
 
     <!-- WM ACTIVITY -->
