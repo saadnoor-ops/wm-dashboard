@@ -142,13 +142,13 @@ td.clickable:hover::after{opacity:1}
 body.light .cell-tooltip{background:var(--bg-card);border-color:var(--border);color:var(--text)}
 
 /* Summary KPI cards */
-.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.summary-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
 .summary-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
 .summary-card:hover{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,.15)}
 .summary-card{transition:all .2s}
 .summary-card .sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
 .summary-card .sc-value{font-size:28px;font-weight:700;color:#f1f5f9;line-height:1}
-.summary-card .sc-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.summary-card .sc-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;font-weight:700}
 .summary-card .sc-delta{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
 .sc-delta.up{background:rgba(16,185,129,.12);color:#10b981}
 .sc-delta.down{background:rgba(239,68,68,.12);color:#ef4444}
@@ -174,6 +174,7 @@ body.light .summary-card:nth-child(2)::before{background:var(--orange)}
 body.light .summary-card:nth-child(3)::before{background:var(--blue)}
 body.light .summary-card:nth-child(4)::before{background:var(--g2)}
 body.light .summary-card:nth-child(5)::before{background:var(--purple)}
+body.light .summary-card:nth-child(6)::before{background:var(--pink)}
 body.light .summary-card .sc-label{color:var(--muted)}
 body.light .summary-card .sc-value{color:var(--text-heading)}
 body.light .summary-card:hover{border-color:var(--bayut-green);box-shadow:0 4px 12px rgba(13,122,63,.12)}
@@ -1063,9 +1064,10 @@ function renderSummaryCards(D){
   const cols=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
   const totalLeads=ov.reduce((a,r)=>a+(r.leads_added||0),0);
   const totalWorkedOn=ov.reduce((a,r)=>a+(r.leads_worked_on||0),0);
-  const totalTasks=ov.reduce((a,r)=>a+(r.tasks_added||0),0);
-  const totalCalls=kd.reduce((a,r)=>a+(r.qualified_calls||0),0);
   const totalMtgs=kd.reduce((a,r)=>a+(r.meetings_conducted||0),0);
+  const totalIB=kd.reduce((a,r)=>a+(r.ib_shared||0),0);
+  const totalIS=kd.reduce((a,r)=>a+(r.is_shared||0),0);
+  const totalIM=kd.reduce((a,r)=>a+(r.im_shared||0),0);
 
   // Card 1: Team Leads + sparkline trend
   const allLeadDays={};ov.forEach(r=>{const s=sp[r.name];if(s&&s.leads)s.leads.forEach((v,i)=>{allLeadDays[i]=(allLeadDays[i]||0)+v;});});
@@ -1093,8 +1095,9 @@ function renderSummaryCards(D){
   const leadsData=ov.filter(r=>(r.leads_added||0)>0).sort((a,b)=>b.leads_added-a.leads_added).map(r=>({name:r.name,val:r.leads_added}));
   const workedData=ov.filter(r=>(r.leads_worked_on||0)>0).sort((a,b)=>b.leads_worked_on-a.leads_worked_on).map(r=>({name:r.name,val:r.leads_worked_on}));
   const mtgData=kd.filter(r=>(r.meetings_conducted||0)>0).sort((a,b)=>b.meetings_conducted-a.meetings_conducted).map(r=>({name:r.name,val:r.meetings_conducted}));
-  const taskData=ov.filter(r=>(r.tasks_added||0)>0).sort((a,b)=>b.tasks_added-a.tasks_added).map(r=>({name:r.name,val:r.tasks_added}));
-  const callData=kd.filter(r=>(r.qualified_calls||0)>0).sort((a,b)=>b.qualified_calls-a.qualified_calls).map(r=>({name:r.name,val:r.qualified_calls}));
+  const ibData=kd.filter(r=>(r.ib_shared||0)>0).sort((a,b)=>b.ib_shared-a.ib_shared).map(r=>({name:r.name,val:r.ib_shared}));
+  const isData=kd.filter(r=>(r.is_shared||0)>0).sort((a,b)=>b.is_shared-a.is_shared).map(r=>({name:r.name,val:r.is_shared}));
+  const imData=kd.filter(r=>(r.im_shared||0)>0).sort((a,b)=>b.im_shared-a.im_shared).map(r=>({name:r.name,val:r.im_shared}));
 
   document.getElementById('summary-cards').innerHTML=`
     <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'leads_added')">
@@ -1112,15 +1115,20 @@ function renderSummaryCards(D){
       <div class="sc-top"><div class="sc-value" data-count="${totalMtgs}">0</div></div>
       <div class="sc-chart">${miniStackedBar(mtgData, totalMtgs)}</div>
     </div>
-    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'tasks_added')">
-      <div class="sc-label">Total Tasks Added</div>
-      <div class="sc-top"><div class="sc-value" data-count="${totalTasks}">0</div></div>
-      <div class="sc-chart">${miniStackedBar(taskData, totalTasks)}</div>
+    <div class="summary-card">
+      <div class="sc-label">Total IB Shared</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalIB}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(ibData, totalIB)}</div>
     </div>
-    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'qualified_calls')">
-      <div class="sc-label">Total Qualified Calls</div>
-      <div class="sc-top"><div class="sc-value" data-count="${totalCalls}">0</div></div>
-      <div class="sc-chart">${miniStackedBar(callData, totalCalls)}</div>
+    <div class="summary-card">
+      <div class="sc-label">Total IS Shared</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalIS}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(isData, totalIS)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Total IM Shared</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalIM}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(imData, totalIM)}</div>
     </div>
   `;
   document.querySelectorAll('#summary-cards .sc-value[data-count]').forEach(el=>animateNumber(el,parseInt(el.dataset.count)));
