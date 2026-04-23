@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>if(window.Chart&&window.ChartDataLabels){Chart.register(ChartDataLabels);}</script>
+<script src="/wm_pipeline.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root {
@@ -895,13 +896,53 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
 
   </div>
 
-  <!-- ═══ TAB: WM PIPELINE (new — placeholder until content is defined) ═══ -->
+  <!-- ═══ TAB: WM PIPELINE ═══ -->
   <div class="top-tab-content" id="wm-pipeline-tab">
+    <!-- Source & generated-at banner -->
+    <div class="sec" style="margin-bottom:8px">
+      <div id="wmp-source" style="font-size:11px;color:var(--muted)"></div>
+    </div>
+    <!-- HERO KPI TILES -->
+    <div class="summary-grid" id="wmp-hero" style="grid-template-columns:repeat(6,minmax(0,1fr))"></div>
+
+    <!-- FUNNEL / SUB-STAGE BREAKDOWN -->
     <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#0d7a3f"></span>WM Pipeline</div>
-      <div class="sec-sub">Coming soon</div>
-      <div class="card" style="padding:40px;text-align:center;color:var(--muted)">
-        This tab is a placeholder. Let me know what pipeline view you want here and I'll wire it up.
+      <div class="sec-title"><span class="d" style="background:var(--bayut-green)"></span>Deal Funnel</div>
+      <div class="sec-sub">Deals and total SAR value at each sub-stage</div>
+      <div class="card"><div id="wmp-funnel"></div></div>
+    </div>
+
+    <!-- PER-WM LEADERBOARD -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#1d6cb0"></span>Wealth Manager Leaderboard</div>
+      <div class="sec-sub">Pipeline strength per WM</div>
+      <div class="card"><div class="tw"><table id="wmp-wm-table"></table></div></div>
+    </div>
+
+    <!-- BREAKDOWNS (Investor Type / Strategy / Location) -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#d97706"></span>Breakdowns</div>
+      <div class="sec-sub">Where the pipeline concentrates</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+        <div class="card"><h3 style="font-size:.85rem;font-weight:700;color:var(--bayut-dark);margin-bottom:10px">By Investor Type</h3><div id="wmp-by-type"></div></div>
+        <div class="card"><h3 style="font-size:.85rem;font-weight:700;color:var(--bayut-dark);margin-bottom:10px">By Deal Strategy</h3><div id="wmp-by-strategy"></div></div>
+        <div class="card"><h3 style="font-size:.85rem;font-weight:700;color:var(--bayut-dark);margin-bottom:10px">By Deal Location</h3><div id="wmp-by-loc"></div></div>
+      </div>
+    </div>
+
+    <!-- SEARCHABLE DEALS TABLE -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#6d28d9"></span>All Deals</div>
+      <div class="sec-sub"><span id="wmp-deal-count"></span></div>
+      <div class="card" style="padding:14px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center">
+          <input id="wmp-search" type="text" placeholder="Search deal, investor, WM, status…" oninput="wmpFilter()" style="flex:1;min-width:220px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.72rem;height:30px">
+          <select id="wmp-fwm" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All WMs</option></select>
+          <select id="wmp-fstage" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All Stages</option></select>
+          <select id="wmp-fstatus" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All Sub-stages</option></select>
+          <select id="wmp-fstrategy" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All Strategies</option></select>
+        </div>
+        <div class="tw"><table id="wmp-deals-table"></table></div>
       </div>
     </div>
   </div>
@@ -2349,6 +2390,249 @@ setInterval(()=>{
   }).catch(()=>{});
 }, 300000); // 5 minutes
 
+// ══════════════════════════════════════════════════════════════════════════
+// WM PIPELINE tab — static Excel-driven view
+// ══════════════════════════════════════════════════════════════════════════
+(function(){
+  const SAR = v => {
+    if(v==null||isNaN(v)) return '—';
+    if(v>=1e9) return 'SAR '+(v/1e9).toFixed(2)+'B';
+    if(v>=1e6) return 'SAR '+(v/1e6).toFixed(1)+'M';
+    if(v>=1e3) return 'SAR '+(v/1e3).toFixed(0)+'K';
+    return 'SAR '+Math.round(v).toLocaleString();
+  };
+  const INT = v => (v==null||isNaN(v)) ? '0' : Math.round(v).toLocaleString();
+
+  // Stage → color map (parent stages)
+  const STAGE_COLORS = {
+    'Prospect': '#d97706',          // orange
+    'Mature': '#1d6cb0',            // blue
+    'Pre-Closure': '#6d28d9',       // purple
+    'Execution': '#0d7a3f',         // bayut-green
+    'Partially Closed': '#10935a',  // g2
+    'Full Closure': '#059669',      // site office green
+    'Deal Paused': '#506b5a',       // muted
+    'Deal Lost': '#dc2626',         // red
+  };
+  // Given a sub-stage like "6. Investor Deal DD", return its parent stage name
+  function subStageToParent(ss, taxonomy){
+    if(!ss) return null;
+    const s = ss.trim();
+    for(const st of taxonomy.stages){
+      if(st.sub_stages && st.sub_stages.some(x=>x.trim().toLowerCase()===s.toLowerCase())) return st.name;
+    }
+    // Fallback heuristic by number
+    const m = s.match(/^(\d+)\./); if(m){ const n=parseInt(m[1]);
+      if(n<=4) return 'Prospect'; if(n<=8) return 'Mature';
+      if(n===9) return 'Pre-Closure'; if(n===10) return 'Execution';
+      if(n===11) return 'Partially Closed'; if(n===12) return 'Full Closure';
+    }
+    return null;
+  }
+  function colorFor(parentStage){ return STAGE_COLORS[parentStage] || '#506b5a'; }
+
+  function renderWMPipeline(){
+    const D = window.WM_PIPELINE_DATA;
+    if(!D){
+      document.getElementById('wmp-hero').innerHTML =
+        '<div class="card" style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted)">Pipeline data not loaded. Run <code>python import_pipeline_xlsx.py</code>.</div>';
+      return;
+    }
+    const deals = D.deals || [];
+    const tax   = D.taxonomy || {stages:[]};
+
+    // Source banner
+    document.getElementById('wmp-source').textContent =
+      `Source: ${D.source_file || 'wm_pipeline.xlsx'} · Generated: ${(D.generated_at||'').replace('T',' ')} · ${deals.length} deals`;
+
+    // ── HERO TILES ──────────────────────────────────────────────────────
+    const totalDeals = deals.length;
+    const withValue  = deals.filter(d=>d.value).length;
+    const valueTotal = deals.reduce((a,d)=>a+(d.value||0),0);
+    const uniqueInv  = new Set(deals.map(d=>(d.investor||'').toLowerCase()).filter(Boolean)).size;
+    const avgValue   = withValue ? valueTotal/withValue : 0;
+    const minDevRev  = deals.reduce((a,d)=>a+(d.min_dev_revenue||0),0);
+    const withLev    = deals.filter(d=>{const l=(d.leverage||'').toLowerCase();return l==='yes';}).length;
+    const tiles = [
+      ['Total Deals', INT(totalDeals), 'var(--bayut-green)'],
+      ['Pipeline Value', SAR(valueTotal), 'var(--orange)'],
+      ['Unique Investors', INT(uniqueInv), 'var(--blue)'],
+      ['Avg Deal Value', SAR(avgValue), 'var(--g2)'],
+      ['Min Developer Revenue', SAR(minDevRev), 'var(--purple)'],
+      ['Deals with Leverage', INT(withLev), 'var(--pink)'],
+    ];
+    document.getElementById('wmp-hero').innerHTML = tiles.map((t,i)=>
+      `<div class="summary-card"><div class="sc-label" style="color:var(--muted)">${t[0]}</div>
+       <div class="sc-top" style="align-items:baseline"><div class="sc-value" style="color:var(--text-heading);font-size:22px">${t[1]}</div></div>
+       </div>`).join('');
+    // Re-apply the per-position accent bar colors (light theme override expects specific n-th children)
+    const heroCards = document.querySelectorAll('#wmp-hero .summary-card');
+    heroCards.forEach((el,i)=>{ el.style.setProperty('--_accent', tiles[i][2]);
+      el.style.borderTop = `3px solid ${tiles[i][2]}`; });
+
+    // ── FUNNEL (sub-stages 1–12) ────────────────────────────────────────
+    // Build ordered list of sub-stages from the taxonomy
+    const subStages = [];
+    tax.stages.forEach(st => (st.sub_stages||[]).forEach(ss => subStages.push({parent:st.name, sub:ss})));
+    const funnelRows = subStages.map(({parent,sub})=>{
+      const matching = deals.filter(d => (d.status||'').trim().toLowerCase() === sub.trim().toLowerCase());
+      return {parent, sub, count:matching.length, value:matching.reduce((a,d)=>a+(d.value||0),0)};
+    });
+    const maxCount = Math.max(1, ...funnelRows.map(r=>r.count));
+    document.getElementById('wmp-funnel').innerHTML = `
+      <div style="display:grid;gap:6px">
+        ${funnelRows.map(r=>{
+          const pct = Math.max(4, Math.round(r.count/maxCount*100));
+          const c = colorFor(r.parent);
+          const stageChip = `<span style="background:${c}22;color:${c};padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-right:8px">${r.parent}</span>`;
+          return `<div style="display:flex;align-items:center;gap:10px;font-size:.75rem">
+            <div style="flex:0 0 260px">${stageChip}${r.sub}</div>
+            <div style="flex:1;background:var(--surface2);border-radius:6px;overflow:hidden;height:26px;position:relative">
+              <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,${c}cc,${c});display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:700;font-size:.72rem">${r.count>0?r.count:''}</div>
+            </div>
+            <div style="flex:0 0 110px;text-align:right;font-weight:700;color:var(--text-heading);font-size:.75rem">${r.value>0?SAR(r.value):'—'}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    // ── WM LEADERBOARD ──────────────────────────────────────────────────
+    const wms = {};
+    deals.forEach(d => {
+      const k = d.wm || 'Unassigned';
+      if(!wms[k]) wms[k] = {name:k, count:0, value:0, min_dev:0, days_sum:0, days_n:0};
+      wms[k].count += 1;
+      wms[k].value += (d.value||0);
+      wms[k].min_dev += (d.min_dev_revenue||0);
+      if(d.days_since!=null){ wms[k].days_sum += d.days_since; wms[k].days_n += 1; }
+    });
+    const wmRows = Object.values(wms).sort((a,b)=>b.value-a.value);
+    const teamValue = wmRows.reduce((a,r)=>a+r.value,0) || 1;
+    const seriesCount = wmRows.map(r=>r.count);
+    const seriesValue = wmRows.map(r=>r.value);
+    const seriesAvg   = wmRows.map(r=>r.count?r.value/r.count:0);
+    const seriesDays  = wmRows.map(r=>r.days_n?r.days_sum/r.days_n:0);
+    const wmTable = `
+      <thead><tr><th>Wealth Manager</th><th class="n">Deals</th><th class="n">Pipeline Value</th>
+        <th class="n">Avg Deal</th><th class="n">Min Dev Revenue</th><th class="n">Avg Days Since</th><th class="n">% of Team</th></tr></thead>
+      <tbody>${wmRows.map(r=>{
+        const avg = r.count ? r.value/r.count : 0;
+        const avgDays = r.days_n ? r.days_sum/r.days_n : 0;
+        const pct = Math.round(r.value/teamValue*100);
+        return `<tr>
+          <td>${r.name}</td>
+          <td class="nb ${cfClass(r.count,seriesCount,1)}">${INT(r.count)}</td>
+          <td class="nb ${cfClass(r.value,seriesValue,1)}">${SAR(r.value)}</td>
+          <td class="n ${cfClass(avg,seriesAvg,1)}">${SAR(avg)}</td>
+          <td class="n">${SAR(r.min_dev)}</td>
+          <td class="n">${avgDays?avgDays.toFixed(1):'—'}</td>
+          <td class="n">${pct}%</td>
+        </tr>`;
+      }).join('')}</tbody>
+      <tfoot><tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)">
+        <td>TOTAL</td>
+        <td class="nb">${INT(wmRows.reduce((a,r)=>a+r.count,0))}</td>
+        <td class="nb">${SAR(teamValue)}</td>
+        <td class="n">—</td>
+        <td class="n">${SAR(wmRows.reduce((a,r)=>a+r.min_dev,0))}</td>
+        <td class="n">—</td>
+        <td class="n">100%</td>
+      </tr></tfoot>`;
+    document.getElementById('wmp-wm-table').innerHTML = wmTable;
+
+    // ── BREAKDOWNS: helper ──────────────────────────────────────────────
+    function renderBreakdown(elId, keyFn, colorPalette){
+      const groups = {};
+      deals.forEach(d => { const k = keyFn(d) || 'Other'; if(!groups[k]) groups[k]={count:0,value:0}; groups[k].count+=1; groups[k].value+=(d.value||0); });
+      const arr = Object.entries(groups).map(([k,v])=>({k,...v})).sort((a,b)=>b.value-a.value);
+      const totalC = arr.reduce((a,r)=>a+r.count,0) || 1;
+      const totalV = arr.reduce((a,r)=>a+r.value,0) || 1;
+      document.getElementById(elId).innerHTML = arr.map((r,i)=>{
+        const c = colorPalette[i%colorPalette.length];
+        const pctC = Math.round(r.count/totalC*100);
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="flex:0 0 130px;font-size:.72rem;color:var(--text);font-weight:600">${r.k}</div>
+          <div style="flex:1;background:var(--surface2);border-radius:4px;height:16px;overflow:hidden"><div style="width:${pctC}%;height:100%;background:${c}"></div></div>
+          <div style="flex:0 0 44px;text-align:right;font-size:.72rem;font-weight:700;color:var(--text-heading)">${r.count}</div>
+          <div style="flex:0 0 72px;text-align:right;font-size:.7rem;color:var(--muted)">${SAR(r.value)}</div>
+        </div>`;
+      }).join('');
+    }
+    renderBreakdown('wmp-by-type',    d=>d.investor_type, ['#1d6cb0','#6d28d9','#d97706','#0d7a3f','#be185d','#10935a']);
+    renderBreakdown('wmp-by-strategy',d=>d.strategy,      ['#0d7a3f','#d97706','#6d28d9','#1d6cb0']);
+    renderBreakdown('wmp-by-loc',     d=>d.deal_location, ['#0d7a3f','#1d6cb0','#d97706','#6d28d9','#be185d','#10935a']);
+
+    // ── ALL-DEALS TABLE ─────────────────────────────────────────────────
+    // Populate filter dropdowns
+    const uniq = (arr) => Array.from(new Set(arr.filter(Boolean))).sort();
+    const fwm      = document.getElementById('wmp-fwm');
+    const fstage   = document.getElementById('wmp-fstage');
+    const fstatus  = document.getElementById('wmp-fstatus');
+    const fstrat   = document.getElementById('wmp-fstrategy');
+    uniq(deals.map(d=>d.wm)).forEach(v=>fwm.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    uniq(deals.map(d=>d.stage)).forEach(v=>fstage.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    uniq(deals.map(d=>d.status)).forEach(v=>fstatus.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    uniq(deals.map(d=>d.strategy)).forEach(v=>fstrat.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    window._wmpDeals = deals;
+    window.wmpFilter();
+  }
+
+  // Filter function — callable from inputs
+  window.wmpFilter = function(){
+    const D = window.WM_PIPELINE_DATA;
+    if(!D) return;
+    const deals = window._wmpDeals || D.deals || [];
+    const q    = (document.getElementById('wmp-search')||{value:''}).value.toLowerCase().trim();
+    const fwm  = (document.getElementById('wmp-fwm')||{value:''}).value;
+    const fst  = (document.getElementById('wmp-fstage')||{value:''}).value;
+    const fss  = (document.getElementById('wmp-fstatus')||{value:''}).value;
+    const fstr = (document.getElementById('wmp-fstrategy')||{value:''}).value;
+    const hit = s => (s||'').toString().toLowerCase().includes(q);
+    const filtered = deals.filter(d =>
+      (!fwm  || d.wm===fwm) &&
+      (!fst  || d.stage===fst) &&
+      (!fss  || d.status===fss) &&
+      (!fstr || d.strategy===fstr) &&
+      (!q    || [d.deal,d.investor,d.wm,d.status,d.stage,d.strategy,d.deal_location,d.next_steps,d.comments].some(hit))
+    );
+    const valSeries = filtered.map(d=>d.value||0);
+    const daysSeries = filtered.map(d=>d.days_since||0);
+
+    document.getElementById('wmp-deal-count').textContent =
+      `${filtered.length} of ${deals.length} deals · Value ${SAR(filtered.reduce((a,d)=>a+(d.value||0),0))}`;
+
+    const thead = `<thead><tr>
+      <th>Date</th><th>WM</th><th>Investor</th><th>Deal</th><th>Location</th>
+      <th>Strategy</th><th class="n">Value</th><th>Leverage</th>
+      <th>Stage</th><th>Sub-stage</th><th>Last Contact</th><th class="n">Days</th><th>Next Steps</th>
+    </tr></thead>`;
+    const rows = filtered.map(d => {
+      const parent = d.stage || subStageToParent(d.status, D.taxonomy) || '';
+      const color  = colorFor(parent);
+      const sschip = d.status ? `<span style="background:${color}22;color:${color};padding:2px 8px;border-radius:4px;font-size:.64rem;font-weight:700">${d.status}</span>` : '';
+      const stchip = d.stage  ? `<span style="background:${color}22;color:${color};padding:2px 8px;border-radius:4px;font-size:.64rem;font-weight:700">${d.stage}</span>` : '';
+      return `<tr>
+        <td>${d.date||'—'}</td>
+        <td>${d.wm||'—'}</td>
+        <td style="font-weight:600">${d.investor||'—'}</td>
+        <td>${d.deal||'—'}</td>
+        <td>${d.deal_location||'—'}</td>
+        <td>${d.strategy||'—'}</td>
+        <td class="nb ${cfClass(d.value||0,valSeries,1)}">${d.value?SAR(d.value):'TBC'}</td>
+        <td>${d.leverage||'—'}</td>
+        <td>${stchip}</td>
+        <td>${sschip}</td>
+        <td>${d.last_contact||'—'}</td>
+        <td class="n ${d.days_since!=null?cfClass(d.days_since,daysSeries,0):''}">${d.days_since!=null?Math.round(d.days_since):'—'}</td>
+        <td style="max-width:320px;white-space:normal;font-size:.72rem;color:var(--muted)">${(d.next_steps||'').replace(/</g,'&lt;').slice(0,200)}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('wmp-deals-table').innerHTML = thead + '<tbody>' + rows + '</tbody>';
+  };
+
+  // Render on page load AND when the tab becomes active (so charts size correctly)
+  document.addEventListener('DOMContentLoaded', renderWMPipeline);
+  if(document.readyState !== 'loading') renderWMPipeline();
+})();
 </script>
 </body>
 </html>
