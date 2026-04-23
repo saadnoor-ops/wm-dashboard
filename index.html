@@ -2447,11 +2447,15 @@ setInterval(()=>{
   }
 
   // ── DEAL FUNNEL — 3-level drill-down ─────────────────────────────────
+  // Normalise stage labels so "1. Prospect" and "Prospect" compare equal
+  function _stripNum(s){ return (s||'').replace(/^\s*\d+\.\s*/,'').trim().toLowerCase(); }
   function dealsAt(stageName, subName){
     const all = window._wmpDealsAll || [];
+    const s = _stripNum(stageName);
+    const u = _stripNum(subName);
     return all.filter(d => {
-      if(stageName && ((d.stage||'').trim().toLowerCase() !== stageName.trim().toLowerCase())) return false;
-      if(subName   && ((d.status||'').trim().toLowerCase() !== subName.trim().toLowerCase())) return false;
+      if(stageName && _stripNum(d.stage) !== s) return false;
+      if(subName   && subName !== '__all__' && _stripNum(d.status) !== u) return false;
       return true;
     });
   }
