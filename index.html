@@ -2766,11 +2766,12 @@ setInterval(()=>{
       document.getElementById(elId).innerHTML = arr.map((r,i)=>{
         const c = colorPalette[i%colorPalette.length];
         const pctC = Math.round(r.count/totalC*100);
-        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="flex:0 0 130px;font-size:.72rem;color:var(--text);font-weight:600">${r.k}</div>
-          <div style="flex:1;background:var(--surface2);border-radius:4px;height:16px;overflow:hidden"><div style="width:${pctC}%;height:100%;background:${c}"></div></div>
-          <div style="flex:0 0 44px;text-align:right;font-size:.72rem;font-weight:700;color:var(--text-heading)">${r.count}</div>
-          <div style="flex:0 0 72px;text-align:right;font-size:.7rem;color:var(--muted)">${SAR(r.value)}</div>
+        const pctV = Math.round(r.value/totalV*100);
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="flex:0 0 130px;font-size:.74rem;color:var(--text);font-weight:600;line-height:1.3">${r.k}</div>
+          <div style="flex:1;background:var(--surface2);border-radius:5px;height:24px;overflow:hidden"><div style="width:${pctC}%;height:100%;background:${c};display:flex;align-items:center;justify-content:flex-end;padding:0 8px;color:#fff;font-weight:700;font-size:.66rem">${pctC>10?pctC+'%':''}</div></div>
+          <div style="flex:0 0 48px;text-align:right;font-size:.78rem;font-weight:700;color:var(--text-heading)">${r.count}</div>
+          <div style="flex:0 0 82px;text-align:right;font-size:.72rem;color:var(--muted)">${SAR(r.value)}</div>
         </div>`;
       }).join('');
     }
