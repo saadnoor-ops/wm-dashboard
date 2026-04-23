@@ -2475,37 +2475,41 @@ setInterval(()=>{
     });
   }
   function _box(opts){
-    const {label, count, value, sub, active, onclick, color, cursor='pointer'} = opts;
+    const {label, count, value, sub, active, dimmed, onclick, color, cursor='pointer'} = opts;
     const bg = active ? `linear-gradient(135deg,${color},${color}dd)` : `linear-gradient(135deg,#ffffff,${color}1a)`;
     const tx = active ? '#fff' : 'var(--text)';
     const mut= active ? 'rgba(255,255,255,.85)' : 'var(--muted)';
     const shadow = active ? `0 2px 10px ${color}55` : '0 1px 3px rgba(0,0,0,.06)';
     const border = active ? color : 'var(--border)';
-    return `<div onclick="${onclick}" style="cursor:${cursor};border:1px solid ${border};border-left:4px solid ${color};border-radius:14px;padding:12px 14px;background:${bg};box-shadow:${shadow};transition:all .15s;min-height:86px;display:flex;flex-direction:column;justify-content:space-between">
-      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${tx};line-height:1.25">${label}</div>
-      ${sub?`<div style="font-size:.68rem;color:${mut};margin-top:2px">${sub}</div>`:''}
-      <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
-        <div style="font-size:1.25rem;font-weight:700;color:${tx}">${count}</div>
-        <div style="font-size:.7rem;color:${mut}">deals</div>
-        <div style="margin-left:auto;font-size:.72rem;font-weight:700;color:${tx}">${value>0?SAR(value):'—'}</div>
+    const opacity = dimmed ? 0.38 : 1;
+    return `<div onclick="${onclick}" style="cursor:${cursor};border:1px solid ${border};border-left:4px solid ${color};border-radius:14px;padding:12px 12px;background:${bg};box-shadow:${shadow};transition:all .15s;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;opacity:${opacity};min-width:0">
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.35px;color:${tx};line-height:1.25;overflow:hidden;text-overflow:ellipsis">${label}</div>
+      ${sub?`<div style="font-size:.64rem;color:${mut};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sub}</div>`:''}
+      <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">
+        <div style="font-size:1.15rem;font-weight:700;color:${tx}">${count}</div>
+        <div style="font-size:.66rem;color:${mut}">deals</div>
+        <div style="margin-left:auto;font-size:.7rem;font-weight:700;color:${tx}">${value>0?SAR(value):'—'}</div>
       </div>
     </div>`;
   }
 
   window.renderFunnelL1 = function(){
     const tax = window._wmpTax || {stages:[]};
-    // Show stages in their taxonomy order, but skip 'Deal Paused'/'Deal Lost' if nothing there
-    const cards = tax.stages.filter(st => st.order <= 10 || dealsAt(st.name).length>0).map(st => {
+    const selectedStage = window._wmpFunnelSelected.stage;
+    const stages = tax.stages.filter(st => st.order <= 10 || dealsAt(st.name).length>0);
+    const cards = stages.map(st => {
       const rows = dealsAt(st.name);
       const totalCount = rows.length;
       const totalValue = rows.reduce((a,d)=>a+(d.value||0),0);
       const c = colorFor(st.name);
-      const active = window._wmpFunnelSelected.stage === st.name;
+      const active = selectedStage === st.name;
+      const dimmed = selectedStage && !active;
       const bg = active ? `linear-gradient(135deg,${c},${c}dd)` : `linear-gradient(135deg,#ffffff,${c}1a)`;
       const tx = active ? '#fff' : 'var(--text)';
       const mut= active ? 'rgba(255,255,255,.85)' : 'var(--muted)';
       const shadow = active ? `0 4px 14px ${c}55` : '0 1px 4px rgba(0,0,0,.06)';
       const border = active ? c : 'var(--border)';
+      const opacity = dimmed ? 0.38 : 1;
       // Sub-stage breakdown rows inside the stage card
       const subs = (st.sub_stages||[]);
       const subRows = subs.length ? subs.map(sub=>{
@@ -2521,27 +2525,28 @@ setInterval(()=>{
           <div style="${active?'color:rgba(255,255,255,.75)':'color:var(--muted)'};min-width:60px;text-align:right;font-size:.64rem">${valStr}</div>
         </div>`;
       }).join('') : `<div style="font-size:.66rem;color:${mut};padding:4px 0;font-style:italic">No sub-stages configured</div>`;
-      return `<div onclick="window.selectFunnelStage('${st.name.replace(/'/g,"\\'")}')" style="cursor:pointer;border:1px solid ${border};border-left:4px solid ${c};border-radius:14px;padding:14px 14px 10px;background:${bg};box-shadow:${shadow};transition:all .15s;min-height:210px;display:flex;flex-direction:column">
-        <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${tx};line-height:1.2">${st.name}</div>
-        <div style="font-size:.64rem;color:${mut};margin-top:2px">${subs.length} sub-stage${subs.length===1?'':'s'}</div>
+      return `<div onclick="window.selectFunnelStage('${st.name.replace(/'/g,"\\'")}')" style="cursor:pointer;border:1px solid ${border};border-left:4px solid ${c};border-radius:14px;padding:12px 12px 10px;background:${bg};box-shadow:${shadow};transition:all .15s;min-height:210px;display:flex;flex-direction:column;opacity:${opacity};min-width:0">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${tx};line-height:1.2">${st.name}</div>
+        <div style="font-size:.62rem;color:${mut};margin-top:2px">${subs.length} sub-stage${subs.length===1?'':'s'}</div>
         <div style="display:flex;align-items:baseline;gap:6px;margin:8px 0 6px">
-          <div style="font-size:1.4rem;font-weight:700;color:${tx};line-height:1">${totalCount}</div>
-          <div style="font-size:.66rem;color:${mut}">deals</div>
-          <div style="margin-left:auto;font-size:.76rem;font-weight:700;color:${tx}">${totalValue>0?SAR(totalValue):'—'}</div>
+          <div style="font-size:1.3rem;font-weight:700;color:${tx};line-height:1">${totalCount}</div>
+          <div style="font-size:.64rem;color:${mut}">deals</div>
+          <div style="margin-left:auto;font-size:.72rem;font-weight:700;color:${tx}">${totalValue>0?SAR(totalValue):'—'}</div>
         </div>
         <div style="margin-top:auto">${subRows}</div>
       </div>`;
     }).join('');
+    const n = stages.length;
     document.getElementById('wmp-funnel-l1').innerHTML =
-      `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">${cards}</div>`;
+      `<div style="display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));gap:8px">${cards}</div>`;
   };
 
   window.selectFunnelStage = function(stage){
     if(window._wmpFunnelSelected.stage === stage){
       // Clicking again deselects and collapses level 2/3
-      window._wmpFunnelSelected = {stage:null, sub:null};
+      window._wmpFunnelSelected = {stage:null, sub:null, wm:null};
     } else {
-      window._wmpFunnelSelected = {stage, sub:null};
+      window._wmpFunnelSelected = {stage, sub:null, wm:null};
     }
     renderFunnelL1();
     renderFunnelL2();
@@ -2562,22 +2567,24 @@ setInterval(()=>{
       window._wmpFunnelSelected.sub = '__all__';
       return;
     }
+    const selectedSub = window._wmpFunnelSelected.sub;
     const cards = subs.map(sub => {
       const rows = dealsAt(stage, sub);
       const wmSet = new Set(rows.map(d=>d.wm).filter(Boolean));
-      const active = window._wmpFunnelSelected.sub === sub;
+      const active = selectedSub === sub;
+      const dimmed = selectedSub && !active;
       return _box({
         label: sub,
         sub: wmSet.size ? Array.from(wmSet).map(w=>w.split(' ')[0]).join(', ') : '—',
         count: rows.length,
         value: rows.reduce((a,d)=>a+(d.value||0),0),
-        active, color: c,
+        active, dimmed, color: c,
         onclick: `window.selectFunnelSub('${sub.replace(/'/g,"\\'")}')`,
       });
     }).join('');
     el.innerHTML =
-      `<div style="font-size:.68rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Sub-stages of <b style="color:${c}">${stage}</b></div>
-       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">${cards}</div>`;
+      `<div style="font-size:.64rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Sub-stages of <b style="color:${c}">${stage}</b></div>
+       <div style="display:grid;grid-template-columns:repeat(${subs.length},minmax(0,1fr));gap:8px">${cards}</div>`;
   };
 
   window.selectFunnelSub = function(sub){
@@ -2586,7 +2593,13 @@ setInterval(()=>{
     } else {
       window._wmpFunnelSelected.sub = sub;
     }
+    window._wmpFunnelSelected.wm = null;  // reset WM focus when sub changes
     renderFunnelL2();
+    renderFunnelL3();
+  };
+
+  window.selectFunnelWM = function(wm){
+    window._wmpFunnelSelected.wm = (window._wmpFunnelSelected.wm === wm) ? null : wm;
     renderFunnelL3();
   };
 
@@ -2594,10 +2607,11 @@ setInterval(()=>{
     const stage = window._wmpFunnelSelected.stage;
     const sub   = window._wmpFunnelSelected.sub;
     const el = document.getElementById('wmp-funnel-l3');
-    if(!stage || !sub){ el.innerHTML=''; return; }
+    if(!stage || !sub){ el.innerHTML=''; window._wmpFunnelSelected.wm=null; return; }
     const rows = sub === '__all__' ? dealsAt(stage, null) : dealsAt(stage, sub);
     if(!rows.length){ el.innerHTML = `<div style="padding:12px;color:var(--muted);font-size:.72rem">No deals at this sub-stage.</div>`; return; }
     const c = colorFor(stage);
+    const selectedWM = window._wmpFunnelSelected.wm;
     // Group deals by WM
     const byWM = {};
     rows.forEach(d => { const k=d.wm||'Unassigned'; if(!byWM[k]) byWM[k]=[]; byWM[k].push(d); });
@@ -2607,6 +2621,11 @@ setInterval(()=>{
       const wmTotal = wmDeals.reduce((a,d)=>a+(d.value||0),0);
       const wmMinDev = wmDeals.reduce((a,d)=>a+(d.min_dev_revenue||0),0);
       const initials = wm.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+      const active = selectedWM === wm;
+      const dimmed = selectedWM && !active;
+      const opacity = dimmed ? 0.38 : 1;
+      const borderCol = active ? c : 'var(--border)';
+      const ring = active ? `box-shadow:0 4px 14px ${c}55;` : '';
       const dealBlocks = wmDeals.map(d => {
         const lev = (d.leverage||'').toLowerCase()==='yes' ? `<b>Yes</b>${extractLeveragePct(d)}`
                   : (d.leverage||'—');
@@ -2625,21 +2644,24 @@ setInterval(()=>{
           </div>
         </div>`;
       }).join('');
-      return `<div class="card" style="padding:14px;border-left:4px solid ${c}">
+      return `<div class="card" onclick="window.selectFunnelWM('${wm.replace(/'/g,"\\'")}')" style="padding:12px;border:1px solid ${borderCol};border-left:4px solid ${c};cursor:pointer;opacity:${opacity};transition:opacity .15s;${ring}min-width:0;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <div style="width:32px;height:32px;border-radius:50%;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem">${initials}</div>
-          <div style="flex:1">
-            <div style="font-weight:700;font-size:.92rem;color:var(--bayut-dark)">${wm}</div>
-            <div style="font-size:.7rem;color:var(--muted)">${wmDeals.length} deal${wmDeals.length===1?'':'s'} · Total ${SAR(wmTotal)}${wmMinDev?` · Min Dev Rev ${SAR(wmMinDev)}`:''}</div>
+          <div style="width:30px;height:30px;border-radius:50%;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;flex-shrink:0">${initials}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.84rem;color:var(--bayut-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${wm}</div>
+            <div style="font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${wmDeals.length} deal${wmDeals.length===1?'':'s'} · ${SAR(wmTotal)}${wmMinDev?` · Min Dev ${SAR(wmMinDev)}`:''}</div>
           </div>
         </div>
         ${dealBlocks}
       </div>`;
     }).join('');
     const header = sub==='__all__' ? `All deals in <b style="color:${c}">${stage}</b>` : `Deals at <b style="color:${c}">${stage} → ${sub}</b>`;
+    // Force N columns so WMs sit in one row (up to 6 — past that, wrap)
+    const nWM = wmOrder.length;
+    const cols = nWM <= 6 ? `repeat(${nWM},minmax(0,1fr))` : `repeat(auto-fit,minmax(240px,1fr))`;
     el.innerHTML =
-      `<div style="font-size:.68rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">${header}</div>
-       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px">${cards}</div>`;
+      `<div style="font-size:.64rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">${header}</div>
+       <div style="display:grid;grid-template-columns:${cols};gap:10px">${cards}</div>`;
   };
 
   function renderWMPipeline(){
