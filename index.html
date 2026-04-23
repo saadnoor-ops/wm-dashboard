@@ -2727,18 +2727,15 @@ setInterval(()=>{
     const seriesDays  = wmRows.map(r=>r.days_n?r.days_sum/r.days_n:0);
     const wmTable = `
       <thead><tr><th>Wealth Manager</th><th class="n">Deals</th><th class="n">Pipeline Value</th>
-        <th class="n">Avg Deal</th><th class="n">Min Dev Revenue</th><th class="n">Avg Days Since</th><th class="n">% of Team</th></tr></thead>
+        <th class="n">Avg Deal</th><th class="n">% Rev Contribution</th></tr></thead>
       <tbody>${wmRows.map(r=>{
         const avg = r.count ? r.value/r.count : 0;
-        const avgDays = r.days_n ? r.days_sum/r.days_n : 0;
         const pct = Math.round(r.value/teamValue*100);
         return `<tr>
           <td>${r.name}</td>
           <td class="nb ${cfClass(r.count,seriesCount,1)}">${INT(r.count)}</td>
           <td class="nb ${cfClass(r.value,seriesValue,1)}">${SAR(r.value)}</td>
           <td class="n ${cfClass(avg,seriesAvg,1)}">${SAR(avg)}</td>
-          <td class="n">${SAR(r.min_dev)}</td>
-          <td class="n">${avgDays?avgDays.toFixed(1):'—'}</td>
           <td class="n">${pct}%</td>
         </tr>`;
       }).join('')}</tbody>
@@ -2746,8 +2743,6 @@ setInterval(()=>{
         <td>TOTAL</td>
         <td class="nb">${INT(wmRows.reduce((a,r)=>a+r.count,0))}</td>
         <td class="nb">${SAR(teamValue)}</td>
-        <td class="n">—</td>
-        <td class="n">${SAR(wmRows.reduce((a,r)=>a+r.min_dev,0))}</td>
         <td class="n">—</td>
         <td class="n">100%</td>
       </tr></tfoot>`;
