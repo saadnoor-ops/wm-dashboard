@@ -688,8 +688,8 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
         <button class="preset" data-preset="yearly">Yearly</button>
       </div>
       <div class="filter-inputs">
-        <label>From</label><input type="date" id="f-start" value="2026-04-16"/>
-        <label>To</label><input type="date" id="f-end" value="2026-04-22"/>
+        <label>From</label><input type="date" id="f-start" value="2026-04-17"/>
+        <label>To</label><input type="date" id="f-end" value="2026-04-23"/>
         <button class="btn" onclick="loadData()">Apply</button>
       </div>
       <select id="f-wm" style="display:none"><option value="">All</option></select>
@@ -1739,29 +1739,32 @@ function render(D){
       </tr>`;
       const colH=`<tr>
         <th>Name</th>
-        <th class="n">Leads Added</th><th class="n">Leads Worked On</th><th class="n">Qualified Calls</th><th class="n">Unique Meetings</th>
+        <th class="n">Leads Added</th><th class="n">Leads Worked On</th><th class="n">Qualified Calls</th><th class="n">Total Meetings</th>
         <th class="n">IB Shared</th><th class="n">IS Shared</th><th class="n">IM Shared</th>
         <th class="n">Deals Closed</th><th class="n">Revenue ($)</th>
       </tr>`;
       const ovMap={};D.overview.forEach(r=>ovMap[r.name]=r);
+      const tbMap={};(D.task_breakdown||[]).forEach(r=>tbMap[r.name]=r);
       const sp=D.sparklines||{};
       kd.sort((a,b)=>(ovMap[b.name]||{}).leads_worked_on-(ovMap[a.name]||{}).leads_worked_on||0);
+      // Total Meetings = Video Meetings + Meeting Done (from task_breakdown)
+      const totalMeetingsOf=name=>{const tb=tbMap[name]||{};return (tb['Video Meetings']||0)+(tb['Meeting Done']||0);};
       // Pre-compute per-column series for conditional-formatting bands (Section 2.6)
       const cfSeries={
         leads_added: kd.map(r=>(ovMap[r.name]||{}).leads_added||0),
         leads_worked_on: kd.map(r=>(ovMap[r.name]||{}).leads_worked_on||0),
         qualified_calls: kd.map(r=>r.qualified_calls||0),
-        unique_meetings: kd.map(r=>(ovMap[r.name]||{}).unique_meetings||0),
+        total_meetings: kd.map(r=>totalMeetingsOf(r.name)),
         ib_shared: kd.map(r=>r.ib_shared||0),
         is_shared: kd.map(r=>r.is_shared||0),
         im_shared: kd.map(r=>r.im_shared||0),
         deals_closed: kd.map(r=>r.deals_closed||0),
       };
       const tbody=kd.map(r=>{const ov=ovMap[r.name]||{};
-        const v={leads_added:ov.leads_added||0,leads_worked_on:ov.leads_worked_on||0,qualified_calls:r.qualified_calls||0,unique_meetings:ov.unique_meetings||0,ib_shared:r.ib_shared||0,is_shared:r.is_shared||0,im_shared:r.im_shared||0,deals_closed:r.deals_closed||0};
+        const v={leads_added:ov.leads_added||0,leads_worked_on:ov.leads_worked_on||0,qualified_calls:r.qualified_calls||0,total_meetings:totalMeetingsOf(r.name),ib_shared:r.ib_shared||0,is_shared:r.is_shared||0,im_shared:r.im_shared||0,deals_closed:r.deals_closed||0};
         return `<tr>
           <td>${r.name}</td>
-          <td class="nb clickable ${cfClass(v.leads_added,cfSeries.leads_added,1)}" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(v.leads_added)}</td><td class="nb clickable ${cfClass(v.leads_worked_on,cfSeries.leads_worked_on,1)}" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(v.leads_worked_on)}</td><td class="nb clickable ${cfClass(v.qualified_calls,cfSeries.qualified_calls,1)}" onclick="drillMetric('${r.name}','qualified_calls')" onmouseenter="showTooltip(this,'Calls with 60s+ talk time')" onmouseleave="hideTooltip()">${fmt(v.qualified_calls)}</td><td class="nb clickable ${cfClass(v.unique_meetings,cfSeries.unique_meetings,1)}" onclick="drillMetric('${r.name}','unique_meetings')" onmouseenter="showTooltip(this,'Unique client meetings (1 per lead)')" onmouseleave="hideTooltip()">${fmt(v.unique_meetings)}</td>
+          <td class="nb clickable ${cfClass(v.leads_added,cfSeries.leads_added,1)}" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(v.leads_added)}</td><td class="nb clickable ${cfClass(v.leads_worked_on,cfSeries.leads_worked_on,1)}" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(v.leads_worked_on)}</td><td class="nb clickable ${cfClass(v.qualified_calls,cfSeries.qualified_calls,1)}" onclick="drillMetric('${r.name}','qualified_calls')" onmouseenter="showTooltip(this,'Calls with 60s+ talk time')" onmouseleave="hideTooltip()">${fmt(v.qualified_calls)}</td><td class="nb ${cfClass(v.total_meetings,cfSeries.total_meetings,1)}" onmouseenter="showTooltip(this,'Video Meetings + Meeting Done')" onmouseleave="hideTooltip()">${fmt(v.total_meetings)}</td>
           <td class="n ${cfClass(v.ib_shared,cfSeries.ib_shared,1)}">${fmt(v.ib_shared)}</td><td class="n ${cfClass(v.is_shared,cfSeries.is_shared,1)}">${fmt(v.is_shared)}</td><td class="n ${cfClass(v.im_shared,cfSeries.im_shared,1)}">${fmt(v.im_shared)}</td>
           <td class="nb ${cfClass(v.deals_closed,cfSeries.deals_closed,1)}">${fmt(v.deals_closed)}</td><td class="nb">${fmtR(r.revenue)}</td>
         </tr>`;}).join("");
@@ -1770,16 +1773,18 @@ function render(D){
       const avg=(key)=>len?Math.round(sum(key)/len*10)/10:0;
       const ovSum=(key)=>D.overview.reduce((a,r)=>a+(r[key]||0),0);
       const ovAvg=(key)=>{const vals=D.overview;return vals.length?Math.round(ovSum(key)/vals.length*10)/10:0;};
+      const totMeetSum=kd.reduce((a,r)=>a+totalMeetingsOf(r.name),0);
+      const totMeetAvg=len?Math.round(totMeetSum/len*10)/10:0;
       const tfoot=`
         <tr style="border-top:2px solid #f59e0b;font-weight:700;color:#f1f5f9;">
           <td>TOTAL</td>
-          <td class="nb clickable" onclick="drillMetric(null,'leads_added')">${fmt(ovSum('leads_added'))}</td><td class="nb clickable" onclick="drillMetric(null,'leads_worked_on')">${fmt(ovSum('leads_worked_on'))}</td><td class="nb clickable" onclick="drillMetric(null,'qualified_calls')">${fmt(sum('qualified_calls'))}</td><td class="nb clickable" onclick="drillMetric(null,'unique_meetings')">${fmt(ovSum('unique_meetings'))}</td>
+          <td class="nb clickable" onclick="drillMetric(null,'leads_added')">${fmt(ovSum('leads_added'))}</td><td class="nb clickable" onclick="drillMetric(null,'leads_worked_on')">${fmt(ovSum('leads_worked_on'))}</td><td class="nb clickable" onclick="drillMetric(null,'qualified_calls')">${fmt(sum('qualified_calls'))}</td><td class="nb">${fmt(totMeetSum)}</td>
           <td class="n">${fmt(sum('ib_shared'))}</td><td class="n">${fmt(sum('is_shared'))}</td><td class="n">${fmt(sum('im_shared'))}</td>
           <td class="nb">${fmt(sum('deals_closed'))}</td><td class="nb">${fmtR(sum('revenue'))}</td>
         </tr>
         <tr style="font-weight:600;color:#fbbf24;font-size:11px">
           <td>TEAM AVG</td>
-          <td class="n">${ovAvg('leads_added')}</td><td class="n">${ovAvg('leads_worked_on')}</td><td class="n">${avg('qualified_calls')}</td><td class="n">${ovAvg('unique_meetings')}</td>
+          <td class="n">${ovAvg('leads_added')}</td><td class="n">${ovAvg('leads_worked_on')}</td><td class="n">${avg('qualified_calls')}</td><td class="n">${totMeetAvg}</td>
           <td class="n">${avg('ib_shared')}</td><td class="n">${avg('is_shared')}</td><td class="n">${avg('im_shared')}</td>
           <td class="n">${avg('deals_closed')}</td><td class="n">${fmtR(avg('revenue'))}</td>
         </tr>`;
@@ -1859,21 +1864,27 @@ function render(D){
   // Tasks
   {
     const tk=D.task_breakdown, cols=D.task_cols;
-    const h=[["Name",""],["Total Tasks","nb"]].concat(cols.map(c=>[c,"n"]));
-    const rows=tk.map(r=>[r.name,fmt(r.total)].concat(cols.map(c=>fmt(r[c]||0))));
+    // Unique Meetings lives on the overview; join it in as an extra column after the task-type columns
+    const ovMap2={};(D.overview||[]).forEach(r=>ovMap2[r.name]=r);
+    const uniqOf=name=>(ovMap2[name]||{}).unique_meetings||0;
+    const h=[["Name",""],["Total Tasks","nb"]].concat(cols.map(c=>[c,"n"])).concat([["Unique Meetings","n"]]);
+    const rows=tk.map(r=>[r.name,fmt(r.total)].concat(cols.map(c=>fmt(r[c]||0))).concat([fmt(uniqOf(r.name))]));
     const tLen=tk.length||1;
-    // Conditional-formatting series for Total + each task-type column
+    const uniqColIdx=1+1+cols.length; // Name(0), Total Tasks(1), cols..., Unique Meetings at end
+    // Conditional-formatting series for Total + each task-type column + Unique Meetings
     const tkCfSeries={1:tk.map(r=>r.total||0)};
     cols.forEach((c,ci)=>{tkCfSeries[ci+2]=tk.map(r=>r[c]||0);});
+    tkCfSeries[uniqColIdx]=tk.map(r=>uniqOf(r.name));
     const thead2="<thead><tr>"+h.map(x=>`<th class="${x[1]||''}">${x[0]}</th>`).join("")+"</tr></thead>";
     const tbody2="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>{
       let cls=h[i][1]||'';
       if(tkCfSeries[i]){const n=parseFloat(String(c).replace(/,/g,''))||0;const band=cfClass(n,tkCfSeries[i],1);if(band)cls+=(cls?' ':'')+band;}
       return `<td class="${cls}">${c}</td>`;
     }).join("")+"</tr>").join("")+"</tbody>";
+    const uniqSum=tk.reduce((a,r)=>a+uniqOf(r.name),0);
     const tfoot2=`<tfoot>
-      <tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)"><td>TOTAL</td><td class="nb">${fmt(sc(tk,"total"))}</td>${cols.map(c=>`<td class="nb">${fmt(tk.reduce((a,r)=>a+(r[c]||0),0))}</td>`).join("")}</tr>
-      <tr style="font-weight:600;color:#fbbf24;font-size:11px"><td>TEAM AVG</td><td class="n">${Math.round(sc(tk,"total")/tLen*10)/10}</td>${cols.map(c=>`<td class="n">${Math.round(tk.reduce((a,r)=>a+(r[c]||0),0)/tLen*10)/10}</td>`).join("")}</tr>
+      <tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)"><td>TOTAL</td><td class="nb">${fmt(sc(tk,"total"))}</td>${cols.map(c=>`<td class="nb">${fmt(tk.reduce((a,r)=>a+(r[c]||0),0))}</td>`).join("")}<td class="nb">${fmt(uniqSum)}</td></tr>
+      <tr style="font-weight:600;color:#fbbf24;font-size:11px"><td>TEAM AVG</td><td class="n">${Math.round(sc(tk,"total")/tLen*10)/10}</td>${cols.map(c=>`<td class="n">${Math.round(tk.reduce((a,r)=>a+(r[c]||0),0)/tLen*10)/10}</td>`).join("")}<td class="n">${Math.round(uniqSum/tLen*10)/10}</td></tr>
     </tfoot>`;
     document.getElementById("t-tasks").innerHTML=thead2+tbody2+tfoot2;
   }
