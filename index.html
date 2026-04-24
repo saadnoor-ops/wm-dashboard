@@ -595,9 +595,9 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
       <div><h1>Wealth Manager Performance</h1><p>Team Scott Nicol &middot; Bayut KSA</p></div>
     </div>
     <div class="top-tabs" style="margin:0">
-      <button class="top-tab active" onclick="switchTopTab('kpis-tab')">Wealth Manager KPIs</button>
-      <button class="top-tab" onclick="switchTopTab('wm-pipeline-tab')">WM Pipeline</button>
-      <button class="top-tab" onclick="switchTopTab('pipeline-tab')">WM Meeting notes</button>
+      <button class="top-tab active" onclick="switchTopTab('kpis-tab')">KPIs</button>
+      <button class="top-tab" onclick="switchTopTab('wm-pipeline-tab')">Pipeline</button>
+      <button class="top-tab" onclick="switchTopTab('pipeline-tab')">Sentiment Analysis</button>
       <button class="top-tab" onclick="switchTopTab('analytics-tab')" style="display:none">Analytics</button>
       <button class="top-tab" onclick="switchTopTab('insights-tab')" style="display:none">Insights</button>
     </div>
@@ -609,27 +609,15 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
       <a href="/logout" class="logout-link" title="Sign out">&#x2192;</a>
     </div>
     <button class="theme-btn" onclick="toggleEditMode()" id="edit-toggle" title="Edit mode">&#9998;</button>
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-toggle" title="Day/Night mode">&#9790;</button>
     <button class="theme-btn" onclick="openImportModal()" id="import-btn" title="Import data">&#8682;</button>
-    <button class="theme-btn notif-btn" onclick="toggleNotifications()" id="notif-toggle" title="Notifications">&#128276;<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
     <select id="theme-select" class="theme-select" onchange="applyTheme(this.value)" title="Choose theme">
+      <option value="bayut" selected>🟢 Bayut — Brand green gradient (#0d7a3f)</option>
       <option value="default">🌙 Midnight — Navy to indigo gradient</option>
-      <option value="ocean">🧊 Arctic — Cool cyan, ice blue tones</option>
-      <option value="forest">🌿 Emerald — Rich green, nature-inspired</option>
-      <option value="sunset">🔥 Amber — Warm orange, golden glow</option>
-      <option value="royal">🔮 Nebula — Cosmic violet, purple haze</option>
-      <option value="rose">🌸 Sakura — Soft pink, elegant blush</option>
-      <option value="slate">⚙️ Graphite — Neutral gray, corporate clean</option>
-      <option value="noir">🖤 Noir — Pure black, white contrast</option>
-      <option value="cyber">⚡ Cyber — Neon cyan, futuristic glow</option>
-      <option value="nord">❄️ Nord — Arctic blue-gray, Scandinavian</option>
-      <option value="copper">🥃 Copper — Bronze luxury, warm executive</option>
       <option value="aurora">🌌 Aurora — Gradient teal to purple</option>
       <option value="lava">🌋 Lava — Gradient red to orange</option>
       <option value="ocean-gradient">🌊 Deep Sea — Gradient navy to teal</option>
       <option value="dusk">🌆 Dusk — Gradient purple to pink sunset</option>
       <option value="jungle">🌴 Jungle — Deep dark green gradient</option>
-      <option value="bayut" selected>🟢 Bayut — Brand green (#0d7a3f)</option>
     </select>
   </div>
 </header>
