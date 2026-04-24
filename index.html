@@ -1485,17 +1485,15 @@ function checkNotifications(D){
   }
 }
 
-// Theme toggle
+// Theme toggle (button removed; function kept for backward-compat)
 function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight=document.body.classList.contains('light');
-  document.getElementById('theme-toggle').innerHTML=isLight?'&#9728;':'&#9790;';
+  const tt=document.getElementById('theme-toggle');if(tt)tt.innerHTML=isLight?'&#9728;':'&#9790;';
   localStorage.setItem('wm-theme',isLight?'light':'dark');
-  // Re-render charts with updated colors
   window.dispatchEvent(new Event('resize'));
 }
-// Restore theme
-if(localStorage.getItem('wm-theme')==='light'){document.body.classList.add('light');document.getElementById('theme-toggle').innerHTML='&#9728;';}
+if(localStorage.getItem('wm-theme')==='light'){document.body.classList.add('light');const tt=document.getElementById('theme-toggle');if(tt)tt.innerHTML='&#9728;';}
 
 // Theme selector
 const THEMES=['default','ocean','forest','sunset','royal','rose','slate','noir','cyber','nord','copper','aurora','lava','ocean-gradient','dusk','jungle','bayut'];

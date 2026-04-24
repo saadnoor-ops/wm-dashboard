@@ -4,14 +4,54 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>WM Performance Dashboard</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>if(window.Chart&&window.ChartDataLabels){Chart.register(ChartDataLabels);}</script>
+<script src="/wm_pipeline.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
-header{background:linear-gradient(135deg,#1a1f2e,#141824);border-bottom:1px solid #2d3748;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100}
+:root {
+  --bg: #f4f8f5;
+  --surface: #ffffff;
+  --surface2: #edf5ef;
+  --g1: #0d7a3f;
+  --g2: #10935a;
+  --g3: #27a96d;
+  --g4: #5cc08a;
+  --g5: #a8dbbe;
+  --g6: #ddf1e5;
+  --accent: #08643a;
+  --accent2: #0a5c3d;
+  --orange: #d97706;
+  --red: #dc2626;
+  --blue: #1d6cb0;
+  --purple: #6d28d9;
+  --pink: #be185d;
+  --text: #1a2e22;
+  --muted: #506b5a;
+  --border: #c4d8ca;
+  --bayut-green: #0d7a3f;
+  --bayut-dark: #063d24;
+}
+/* Dark mode */
+body.dark {
+  --bg: #111714;
+  --surface: #1a2420;
+  --surface2: #223029;
+  --text: #e4ece7;
+  --muted: #8a9b92;
+  --border: #2d3d35;
+  --g6: #1a2e22;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;
+  /* legacy variable aliases mapped to new palette so existing rules keep working */
+  --bg-secondary:var(--surface2);--bg-card:var(--surface);--text-muted:var(--muted);--text-heading:var(--bayut-dark);--table-header:var(--surface2);--table-hover:var(--g6);--table-border:var(--border);
+  background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--bg-card),var(--bg-secondary));border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100}
 .logo-area{display:flex;align-items:center;gap:12px}
 .logo-badge{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff}
-header h1{font-size:20px;font-weight:700;color:#f1f5f9}
-header p{font-size:11px;color:#94a3b8;margin-top:2px}
+header h1{font-size:20px;font-weight:700;color:var(--text-heading)}
+header p{font-size:11px;color:var(--text-muted);margin-top:2px}
 .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .filters label{font-size:11px;color:#94a3b8}
 .filters input[type=date],.filters select{background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
@@ -25,29 +65,29 @@ header p{font-size:11px;color:#94a3b8;margin-top:2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 main{padding:20px 24px;flex:1;min-width:0}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:28px}
-.kc{background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
+.kc{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
 .kc:hover{border-color:#6366f1}
 .kc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
 .kc:nth-child(1)::before{background:#6366f1}.kc:nth-child(2)::before{background:#f59e0b}
 .kc:nth-child(3)::before{background:#10b981}.kc:nth-child(4)::before{background:#3b82f6}
 .kc:nth-child(5)::before{background:#ec4899}.kc:nth-child(6)::before{background:#14b8a6}
 .kc:nth-child(7)::before{background:#a855f7}.kc:nth-child(8)::before{background:#ef4444}
-.kl{font-size:10px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
-.kv{font-size:26px;font-weight:700;color:#f1f5f9;line-height:1}
+.kl{font-size:10px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.kv{font-size:26px;font-weight:700;color:var(--text-heading);line-height:1}
 .sec{margin-bottom:30px}
-.sec-title{font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.sec-title{font-size:16px;font-weight:700;color:var(--text-heading);margin-bottom:4px;display:flex;align-items:center;gap:8px}
 .sec-title .d{width:8px;height:8px;border-radius:50%}
-.sec-sub{font-size:11px;color:#64748b;margin-bottom:12px}
-.card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:18px;margin-bottom:14px}
+.sec-sub{font-size:11px;color:var(--text-muted);margin-bottom:12px}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
 .row2{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:14px}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{background:#141824;color:#94a3b8;font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:2px solid #2d3748;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+thead th{background:var(--table-header);color:var(--text-muted);font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:2px solid #2d3748;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
 tbody tr{border-bottom:1px solid #1e2534;transition:background .15s}
-tbody tr:hover{background:#1e2534}
-tbody td{padding:9px 12px;color:#e2e8f0;white-space:nowrap}
+tbody tr:hover{background:var(--table-hover)}
+tbody td{padding:9px 12px;color:var(--text);white-space:nowrap}
 tbody td:first-child{font-weight:600}
-tfoot td{padding:9px 12px;font-weight:700;color:#f1f5f9;border-top:2px solid #2d3748}
+tfoot td{padding:9px 12px;font-weight:700;color:var(--text-heading);border-top:2px solid var(--border)}
 .n{text-align:right;font-variant-numeric:tabular-nums}
 .nb{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:#f1f5f9}
 .presales-group{border-left:3px solid #2d3748}
@@ -60,13 +100,13 @@ tfoot td{padding:9px 12px;font-weight:700;color:#f1f5f9;border-top:2px solid #2d
 .cell-green{background:rgba(16,185,129,.12);color:#10b981}
 .cell-yellow{background:rgba(251,191,36,.12);color:#fbbf24}
 .cell-red{background:rgba(239,68,68,.12);color:#ef4444}
-.wm-profiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px}
-.wm-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:20px;position:relative}
+.wm-profiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.wm-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative}
 .wm-card:hover{border-color:#6366f1}
-.wm-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #2d3748}
+.wm-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .wm-card-header .wm-avatar{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;margin-right:12px;flex-shrink:0}
 .wm-card-header .wm-info{flex:1}
-.wm-card-header .wm-name{font-size:15px;font-weight:700;color:#f1f5f9}
+.wm-card-header .wm-name{font-size:13px;font-weight:700;color:var(--text-heading)}
 .wm-card-header .wm-role{font-size:11px;color:#94a3b8}
 .wm-card-header .wm-conv-badge{background:rgba(16,185,129,.12);color:#10b981;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap}
 .wm-card-header .wm-conv-badge.zero{background:rgba(148,163,184,.1);color:#64748b}
@@ -75,12 +115,12 @@ tfoot td{padding:9px 12px;font-weight:700;color:#f1f5f9;border-top:2px solid #2d
 .wm-highlight .hl-value{font-size:20px;font-weight:700;line-height:1.2}
 .wm-highlight .hl-value.green{color:#10b981}.wm-highlight .hl-value.yellow{color:#fbbf24}.wm-highlight .hl-value.blue{color:#60a5fa}
 .wm-highlight .hl-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px}
-.wm-stats{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.wm-stats{display:grid;grid-template-columns:1fr;gap:0}
 .wm-stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2534;font-size:12px}
 .wm-stat .stat-label{color:#94a3b8}
 .wm-stat .stat-value{color:#e2e8f0;font-weight:600;font-variant-numeric:tabular-nums}
-.wm-stats-left{padding-right:16px;border-right:1px solid #1e2534}
-.wm-stats-right{padding-left:16px}
+.wm-stats-left{padding-right:0;border-right:none}
+.wm-stats-right{padding-left:0}
 /* Drill-down modal */
 .drill-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .drill-box{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:24px;width:560px;max-width:92vw;max-height:80vh;overflow-y:auto}
@@ -102,13 +142,13 @@ td.clickable:hover::after{opacity:1}
 body.light .cell-tooltip{background:var(--bg-card);border-color:var(--border);color:var(--text)}
 
 /* Summary KPI cards */
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
-.summary-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.summary-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.summary-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
 .summary-card:hover{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,.15)}
 .summary-card{transition:all .2s}
 .summary-card .sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
 .summary-card .sc-value{font-size:28px;font-weight:700;color:#f1f5f9;line-height:1}
-.summary-card .sc-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.summary-card .sc-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;font-weight:700}
 .summary-card .sc-delta{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
 .sc-delta.up{background:rgba(16,185,129,.12);color:#10b981}
 .sc-delta.down{background:rgba(239,68,68,.12);color:#ef4444}
@@ -127,6 +167,34 @@ body.light .cell-tooltip{background:var(--bg-card);border-color:var(--border);co
 .summary-card .sc-prog-fill{height:100%;border-radius:3px}
 .summary-card .sc-prog-val{width:24px;font-weight:600;color:#e2e8f0}
 body.light .summary-card{background:var(--bg-card);border-color:var(--border)}
+/* Section 3.4: KPI strip gradient + 3px top accent bar */
+body.light .summary-card{background:linear-gradient(135deg,#ffffff 0%,var(--g6) 100%)}
+body.light .summary-card::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--bayut-green);border-radius:14px 14px 0 0}
+body.light .summary-card:nth-child(2)::before{background:var(--orange)}
+body.light .summary-card:nth-child(3)::before{background:var(--blue)}
+body.light .summary-card:nth-child(4)::before{background:var(--g2)}
+body.light .summary-card:nth-child(5)::before{background:var(--purple)}
+body.light .summary-card:nth-child(6)::before{background:var(--pink)}
+body.light .summary-card .sc-label{color:var(--muted)}
+body.light .summary-card .sc-value{color:var(--text-heading)}
+body.light .summary-card:hover{border-color:var(--bayut-green);box-shadow:0 4px 12px rgba(13,122,63,.12)}
+/* Section 3.5: Filter inputs use --surface2 in light mode */
+body.light .filter-inputs input[type=date],body.light .filter-inputs select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;height:30px;font-size:.72rem}
+body.light .filters input[type=date],body.light .filters select{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+/* Section 3.6: Table column headers — bayut-green uppercase on surface2 */
+body.light table thead th{background:var(--g6);color:var(--bayut-green);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:.66rem;border-bottom:2px solid var(--g3);padding:9px 10px}
+body.light table tbody td{padding:7px 10px;font-size:.76rem}
+body.light table tbody tr:hover{background:var(--g6)}
+/* Section 2.6: Conditional formatting bands */
+.cf-red{background:rgba(220,38,38,.12) !important;color:#dc2626 !important;font-weight:700}
+.cf-orange{background:rgba(234,88,12,.12) !important;color:#ea580c !important;font-weight:700}
+.cf-yellow{background:rgba(202,138,4,.14) !important;color:#ca8a04 !important;font-weight:700}
+.cf-lgreen{background:rgba(22,163,74,.12) !important;color:#16a34a !important;font-weight:700}
+.cf-dgreen{background:rgba(21,128,61,.16) !important;color:#15803d !important;font-weight:700}
+/* Name column — bold brand-dark text, no divider line */
+body.light table tbody td:first-child{font-weight:600;color:var(--bayut-dark);background:var(--surface);white-space:nowrap;min-width:170px}
+body.light table thead th:first-child{white-space:nowrap;min-width:170px}
+body.light table tfoot td:first-child{white-space:nowrap;min-width:170px}
 
 /* Sparklines */
 .sparkline{display:inline-block;vertical-align:middle;margin-left:0}
@@ -171,7 +239,7 @@ tbody tr:hover{box-shadow:inset 3px 0 0 #6366f1}
 
 /* App layout — sidebar + main */
 .app-layout{display:flex;min-height:calc(100vh - 120px)}
-.sidebar{width:200px;background:#141824;border-right:1px solid #2d3748;padding:14px 10px;flex-shrink:0;position:sticky;top:100px;height:fit-content;max-height:calc(100vh - 120px);overflow-y:auto}
+.sidebar{width:200px;background:var(--bg-secondary);border-right:1px solid var(--border);padding:14px 10px;flex-shrink:0;position:sticky;top:100px;height:fit-content;max-height:calc(100vh - 120px);overflow-y:auto}
 .sidebar-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:600;margin-bottom:10px;padding:0 6px}
 .sidebar-wm{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;cursor:pointer;font-size:12px;color:#94a3b8;transition:all .15s;margin-bottom:2px}
 .sidebar-wm:hover{background:#1e2534;color:#e2e8f0}
@@ -274,10 +342,15 @@ body.light .modal-box{background:var(--bg-card);border-color:var(--border)}
 .collapse-icon.open{transform:rotate(90deg)}
 .collapse-body{transition:all .3s ease}
 /* Theme controls */
-.theme-controls{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.theme-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.user-badge{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:4px 10px 4px 4px;font-size:12px;color:var(--text)}
+.user-avatar{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.user-name-text{font-weight:600;color:var(--text-heading);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout-link{color:var(--text-muted);text-decoration:none;font-size:14px;margin-left:4px;transition:color .2s}
+.logout-link:hover{color:#ef4444}
 .theme-btn{width:36px;height:36px;border-radius:8px;background:#1e2534;border:1px solid #3a4556;color:#f1f5f9;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .theme-btn:hover{border-color:#6366f1;background:#2d3748}
-.theme-select{background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 10px;font-size:11px;outline:none;cursor:pointer}
+.theme-select{background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:11px;outline:none;cursor:pointer;min-width:260px}
 .theme-select option{background:#1e2534;color:#e2e8f0}
 
 /* Color themes */
@@ -317,15 +390,120 @@ body.theme-slate .top-tab.active,.theme-slate .preset.active,.theme-slate .btn,.
 body.theme-slate .kc:nth-child(1)::before,.theme-slate .kc:nth-child(2)::before,.theme-slate .kc:nth-child(3)::before,.theme-slate .kc:nth-child(4)::before,.theme-slate .kc:nth-child(5)::before,.theme-slate .kc:nth-child(6)::before,.theme-slate .kc:nth-child(7)::before{background:#64748b}
 body.theme-slate .kc:hover{border-color:#64748b}
 
+/* Noir — deep black with white accents */
+body.theme-noir{--bg:#000000;--bg-secondary:#0a0a0a;--bg-card:#111111;--border:#222222;--text:#e0e0e0;--text-muted:#888;--text-heading:#ffffff;--table-header:#0a0a0a;--table-hover:#1a1a1a;--table-border:#1a1a1a}
+body.theme-noir{background:var(--bg);color:var(--text)}
+body.theme-noir header{background:var(--bg-secondary)}
+body.theme-noir .top-tab.active,.theme-noir .preset.active,.theme-noir .btn,.theme-noir .logo-badge{background:#ffffff !important;color:#000000 !important;border-color:transparent !important}
+body.theme-noir .top-tab,.theme-noir .preset{border-color:#333}
+body.theme-noir .kc::before{background:#ffffff}
+body.theme-noir .kc:hover{border-color:#555}
+
+/* Cyber — electric neon on dark */
+body.theme-cyber{--bg:#0a0e17;--bg-secondary:#0d1321;--bg-card:#111827;--border:#1e293b;--text:#e2e8f0;--text-muted:#67e8f9;--text-heading:#22d3ee;--table-header:#0d1321;--table-hover:#162032;--table-border:#1e293b}
+body.theme-cyber{background:var(--bg);color:var(--text)}
+body.theme-cyber header{background:linear-gradient(135deg,#0d1321,#0a1628)}
+body.theme-cyber .top-tab.active,.theme-cyber .preset.active,.theme-cyber .btn,.theme-cyber .logo-badge{background:linear-gradient(135deg,#06b6d4,#22d3ee) !important;color:#000 !important;border-color:transparent !important}
+body.theme-cyber .kc::before{background:linear-gradient(90deg,#06b6d4,#22d3ee)}
+body.theme-cyber .kc:hover{border-color:#22d3ee}
+body.theme-cyber .sec-title{color:#22d3ee}
+body.theme-cyber .sidebar{background:#0d1321;border-color:#1e293b}
+body.theme-cyber .sidebar-wm.active{background:rgba(6,182,212,.12);color:#22d3ee}
+
+/* Nord — cool arctic blue-gray palette */
+body.theme-nord{--bg:#2e3440;--bg-secondary:#3b4252;--bg-card:#434c5e;--border:#4c566a;--text:#eceff4;--text-muted:#d8dee9;--text-heading:#eceff4;--table-header:#3b4252;--table-hover:#4c566a;--table-border:#4c566a}
+body.theme-nord{background:var(--bg);color:var(--text)}
+body.theme-nord header{background:linear-gradient(135deg,#3b4252,#2e3440)}
+body.theme-nord .top-tab.active,.theme-nord .preset.active,.theme-nord .btn,.theme-nord .logo-badge{background:linear-gradient(135deg,#88c0d0,#81a1c1) !important;color:#2e3440 !important;border-color:transparent !important}
+body.theme-nord .top-tab,.theme-nord .preset{border-color:#4c566a;color:#d8dee9}
+body.theme-nord .kc::before{background:linear-gradient(90deg,#88c0d0,#81a1c1)}
+body.theme-nord .kc:hover{border-color:#88c0d0}
+body.theme-nord .sidebar{background:#3b4252}
+
+/* Copper — warm bronze/copper luxury feel */
+body.theme-copper{--bg:#1a1412;--bg-secondary:#231c18;--bg-card:#2d231e;--border:#3d3129;--text:#e8ddd4;--text-muted:#b8a99c;--text-heading:#f5e6d8;--table-header:#231c18;--table-hover:#362a22;--table-border:#3d3129}
+body.theme-copper{background:var(--bg);color:var(--text)}
+body.theme-copper header{background:linear-gradient(135deg,#231c18,#1a1412)}
+body.theme-copper .top-tab.active,.theme-copper .preset.active,.theme-copper .btn,.theme-copper .logo-badge{background:linear-gradient(135deg,#c9956b,#b8733d) !important;color:#1a1412 !important;border-color:transparent !important}
+body.theme-copper .top-tab,.theme-copper .preset{border-color:#3d3129;color:#b8a99c}
+body.theme-copper .kc::before{background:linear-gradient(90deg,#c9956b,#b8733d)}
+body.theme-copper .kc:hover{border-color:#c9956b}
+body.theme-copper .sidebar{background:#231c18}
+body.theme-copper .sidebar-wm.active{background:rgba(201,149,107,.12);color:#c9956b}
+
+/* Aurora — gradient teal to purple */
+body.theme-aurora{--bg:#0f0f1a;--bg-secondary:#12122a;--bg-card:#1a1a2e;--border:#2a2a4a;--text:#e2e8f0;--text-muted:#a5b4c8;--text-heading:#f1f5f9;--table-header:#12122a;--table-hover:#222244;--table-border:#2a2a4a}
+body.theme-aurora{background:linear-gradient(160deg,#0f2027 0%,#1a1a2e 40%,#16213e 100%);color:var(--text)}
+body.theme-aurora header{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)}
+body.theme-aurora .top-tab.active,.theme-aurora .preset.active,.theme-aurora .btn,.theme-aurora .logo-badge{background:linear-gradient(135deg,#14b8a6,#8b5cf6) !important;border-color:transparent !important}
+body.theme-aurora .kc::before{background:linear-gradient(90deg,#14b8a6,#6366f1,#8b5cf6)}
+body.theme-aurora .kc:hover{border-color:#14b8a6}
+body.theme-aurora .sidebar{background:linear-gradient(180deg,#12122a,#0f2027)}
+body.theme-aurora .sidebar-wm.active{background:linear-gradient(135deg,rgba(20,184,166,.12),rgba(139,92,246,.12));color:#14b8a6}
+body.theme-aurora .wm-card{border-top-color:#14b8a6}
+
+/* Lava — gradient red to orange */
+body.theme-lava{--bg:#1a0a0a;--bg-secondary:#241010;--bg-card:#2d1616;--border:#4a2020;--text:#f0ddd0;--text-muted:#c4a090;--text-heading:#fff0e6;--table-header:#241010;--table-hover:#381c1c;--table-border:#4a2020}
+body.theme-lava{background:linear-gradient(160deg,#1a0a0a 0%,#2d1616 50%,#1a1008 100%);color:var(--text)}
+body.theme-lava header{background:linear-gradient(135deg,#1a0a0a,#3d1212,#4a1a08)}
+body.theme-lava .top-tab.active,.theme-lava .preset.active,.theme-lava .btn,.theme-lava .logo-badge{background:linear-gradient(135deg,#ef4444,#f97316) !important;border-color:transparent !important}
+body.theme-lava .kc::before{background:linear-gradient(90deg,#ef4444,#f97316,#fbbf24)}
+body.theme-lava .kc:hover{border-color:#ef4444}
+body.theme-lava .sidebar{background:linear-gradient(180deg,#241010,#1a0a0a)}
+body.theme-lava .sidebar-wm.active{background:rgba(239,68,68,.12);color:#f97316}
+
+/* Deep Sea — gradient navy to teal */
+body.theme-ocean-gradient{--bg:#020617;--bg-secondary:#0a1628;--bg-card:#0f1d32;--border:#1e3a5f;--text:#e2e8f0;--text-muted:#7dd3fc;--text-heading:#e0f2fe;--table-header:#0a1628;--table-hover:#152a45;--table-border:#1e3a5f}
+body.theme-ocean-gradient{background:linear-gradient(160deg,#020617 0%,#0a1628 40%,#0d3b66 100%);color:var(--text)}
+body.theme-ocean-gradient header{background:linear-gradient(135deg,#020617,#0a2342,#0d4a6b)}
+body.theme-ocean-gradient .top-tab.active,.theme-ocean-gradient .preset.active,.theme-ocean-gradient .btn,.theme-ocean-gradient .logo-badge{background:linear-gradient(135deg,#0ea5e9,#14b8a6) !important;color:#020617 !important;border-color:transparent !important}
+body.theme-ocean-gradient .kc::before{background:linear-gradient(90deg,#0284c7,#0ea5e9,#14b8a6)}
+body.theme-ocean-gradient .kc:hover{border-color:#0ea5e9}
+body.theme-ocean-gradient .sidebar{background:linear-gradient(180deg,#0a1628,#020617)}
+body.theme-ocean-gradient .sidebar-wm.active{background:rgba(14,165,233,.12);color:#7dd3fc}
+
+/* Dusk — gradient purple to pink sunset */
+body.theme-dusk{--bg:#1a0a1e;--bg-secondary:#24102a;--bg-card:#2e1836;--border:#4a2858;--text:#f0ddf5;--text-muted:#d8a8e8;--text-heading:#fce7f3;--table-header:#24102a;--table-hover:#3a1e44;--table-border:#4a2858}
+body.theme-dusk{background:linear-gradient(160deg,#1a0a1e 0%,#2e1836 40%,#3b1248 100%);color:var(--text)}
+body.theme-dusk header{background:linear-gradient(135deg,#1a0a1e,#3b1248,#581c56)}
+body.theme-dusk .top-tab.active,.theme-dusk .preset.active,.theme-dusk .btn,.theme-dusk .logo-badge{background:linear-gradient(135deg,#a855f7,#ec4899) !important;border-color:transparent !important}
+body.theme-dusk .kc::before{background:linear-gradient(90deg,#7c3aed,#a855f7,#ec4899)}
+body.theme-dusk .kc:hover{border-color:#a855f7}
+body.theme-dusk .sidebar{background:linear-gradient(180deg,#24102a,#1a0a1e)}
+body.theme-dusk .sidebar-wm.active{background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(236,72,153,.12));color:#d8a8e8}
+
+/* Jungle — deep dark green gradient */
+body.theme-jungle{--bg:#060d08;--bg-secondary:#0a1a0e;--bg-card:#0f2415;--border:#1a3d22;--text:#d4e8d8;--text-muted:#7bc48a;--text-heading:#e8f5ec;--table-header:#0a1a0e;--table-hover:#14301c;--table-border:#1a3d22}
+body.theme-jungle{background:linear-gradient(160deg,#060d08 0%,#0a1a0e 35%,#0d2818 70%,#0a1f14 100%);color:var(--text)}
+body.theme-jungle header{background:linear-gradient(135deg,#060d08,#0a1a0e,#12321a)}
+body.theme-jungle .top-tab.active,.theme-jungle .preset.active,.theme-jungle .btn,.theme-jungle .logo-badge{background:linear-gradient(135deg,#10b981,#059669) !important;color:#060d08 !important;border-color:transparent !important}
+body.theme-jungle .top-tab,.theme-jungle .preset{border-color:#1a3d22;color:#7bc48a}
+body.theme-jungle .kc::before{background:linear-gradient(90deg,#059669,#10b981,#34d399)}
+body.theme-jungle .kc{background:rgba(15,36,21,.8)}
+body.theme-jungle .kc:hover{border-color:#10b981}
+body.theme-jungle .card{background:rgba(15,36,21,.6)}
+body.theme-jungle .sidebar{background:linear-gradient(180deg,#0a1a0e,#060d08)}
+body.theme-jungle .sidebar-wm{color:#7bc48a}
+body.theme-jungle .sidebar-wm.active{background:rgba(16,185,129,.12);color:#34d399}
+body.theme-jungle .sec-title{color:#34d399}
+body.theme-jungle .wm-card{background:rgba(15,36,21,.6);border-color:#1a3d22}
+
+/* Bayut — official brand green #0d7a3f */
+body.theme-bayut{--accent:#0d7a3f;--accent-dark:#063d24}
+body.theme-bayut header{background:linear-gradient(135deg,#063d24,#0d7a3f)}
+body.theme-bayut .top-tab.active,.theme-bayut .preset.active,.theme-bayut .btn,.theme-bayut .logo-badge{background:linear-gradient(135deg,#063d24,#0d7a3f) !important;color:#fff !important;border-color:transparent !important}
+body.theme-bayut .kc:nth-child(1)::before,.theme-bayut .kc:nth-child(2)::before,.theme-bayut .kc:nth-child(3)::before,.theme-bayut .kc:nth-child(4)::before,.theme-bayut .kc:nth-child(5)::before,.theme-bayut .kc:nth-child(6)::before,.theme-bayut .kc:nth-child(7)::before{background:#0d7a3f}
+body.theme-bayut .kc:hover{border-color:#0d7a3f}
+
 /* Filter strip */
-.filter-strip{background:var(--bg-secondary,#141824);border-bottom:1px solid var(--border,#2d3748);padding:10px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:60px;z-index:99}
+.filter-strip{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:60px;z-index:99}
 .filter-inputs{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.filter-inputs label{font-size:11px;color:var(--text-muted,#94a3b8)}
-.filter-inputs input[type=date],.filter-inputs select{background:var(--bg-card,#1e2534);border:1px solid var(--border,#3a4556);color:var(--text,#e2e8f0);border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
+.filter-inputs label{font-size:11px;color:var(--text-muted)}
+.filter-inputs input[type=date],.filter-inputs select{background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
 .filter-inputs select{min-width:170px}
 
 /* Day mode theme */
-body.light{--bg:#f8fafc;--bg-secondary:#ffffff;--bg-card:#ffffff;--border:#e2e8f0;--text:#1e293b;--text-muted:#64748b;--text-heading:#0f172a;--table-header:#f1f5f9;--table-hover:#f8fafc;--table-border:#e2e8f0}
+body.light{--bg:#f4f8f5;--bg-secondary:#edf5ef;--bg-card:#ffffff;--border:#c4d8ca;--text:#1a2e22;--text-muted:#506b5a;--text-heading:#063d24;--table-header:#edf5ef;--table-hover:#ddf1e5;--table-border:#c4d8ca}
 body.light{background:var(--bg);color:var(--text)}
 body.light header{background:var(--bg-secondary);border-color:var(--border)}
 body.light header h1{color:var(--text-heading)}
@@ -359,14 +537,53 @@ body.light .ac-avatar{background:var(--border);color:var(--text-muted)}
 body.light footer{color:var(--text-muted);border-color:var(--border)}
 body.light .kpi-group-header th{color:#fff !important}
 body.light .progress-bar{background:var(--border)}
+body.light .digest-bar{background:var(--bg-card);border-color:var(--border)}
+body.light .digest-bar .digest-text span{color:var(--text-heading)}
+body.light .summary-card .sc-label{color:var(--text-muted)}
+body.light .summary-card .sc-value{color:var(--text-heading)}
+body.light .summary-card .sc-legend{color:var(--text-muted)}
+body.light .ageing-card{background:var(--bg-card);border-color:var(--border)}
+body.light .ageing-card .ac-name{color:var(--text-heading)}
+body.light .ageing-card .ac-avatar{background:var(--border);color:var(--text-muted)}
+body.light .note-card{background:var(--bg-card);border-color:var(--border)}
+body.light .note-card .note-name{color:var(--text-heading)}
+body.light .note-card .note-body{color:var(--text)}
+/* Notification panel — light-mode overrides */
+body.light .notif-panel{background:var(--bg-card);border-color:var(--border);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+body.light .notif-header{color:var(--text-heading);border-bottom-color:var(--border)}
+body.light .notif-item:hover{background:var(--surface2)}
+body.light .notif-item .notif-text{color:var(--text)}
+body.light .notif-item .notif-time{color:var(--text-muted)}
+body.light .pip-chip{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
+body.light .stage-btn{background:var(--bg-card);border-color:var(--border);color:var(--text-muted)}
+body.light .drill-box{background:var(--bg-card);border-color:var(--border)}
+body.light .drill-box .drill-title span{color:var(--text-heading)}
+body.light .cell-tooltip{background:var(--bg-card);border-color:var(--border);color:var(--text)}
+body.light .collapse-icon{color:var(--text-muted)}
+body.light main{color:var(--text)}
 body.light .theme-select{background:var(--bg-card);border-color:var(--border);color:var(--text)}
 body.light .filter-strip{background:var(--bg-secondary);border-color:var(--border)}
 body.light .filter-inputs input[type=date],body.light .filter-inputs select{background:var(--bg-card);border-color:var(--border);color:var(--text)}
 
-footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1px solid #1e2534;margin-top:30px}
+footer{text-align:center;padding:18px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:30px}
+
+/* ── Bayut design-spec overrides (items 3, 4, 5) ───────────────────────── */
+header{background:linear-gradient(135deg,var(--bayut-dark),var(--bayut-green));box-shadow:0 2px 8px rgba(0,80,40,.15)}
+body.light.theme-bayut header{background:linear-gradient(135deg,var(--bayut-dark),var(--bayut-green))}
+header h1,body.light header h1,body.light.theme-bayut header h1{color:#ffffff}
+header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,255,.85)}
+.card,.summary-card,.wm-card,.kc,.modal-box,.drill-box,.notif-panel,.import-drop,.preset,.btn,.top-tab{border-radius:14px}
+.logo-badge,.btn,.preset.active,.top-tab.active{background:var(--bayut-green)!important;color:#fff!important;border-color:transparent!important}
+.btn:hover{filter:brightness(1.08)}
+/* ── Section 6: depth hierarchy (item 8) ───────────────────────────────── */
+.card,.summary-card,.modal-box,.drill-box{box-shadow:0 1px 4px rgba(13,122,63,.06)}
+.wm-card{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.kc{box-shadow:0 1px 4px rgba(13,122,63,.08)}
+.filter-strip{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.notif-panel,.theme-select,select,.drill-overlay .drill-box{box-shadow:0 4px 12px rgba(0,0,0,.15)}
 </style>
 </head>
-<body>
+<body class="light theme-bayut">
 
 <div id="loading"><div class="spinner"></div><div class="load-text">Loading data from Propforce...</div></div>
 
@@ -377,26 +594,29 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       <div><h1>Wealth Manager Performance</h1><p>Team Scott Nicol &middot; Bayut KSA</p></div>
     </div>
     <div class="top-tabs" style="margin:0">
-      <button class="top-tab active" onclick="switchTopTab('kpis-tab')">Wealth Manager KPIs</button>
-      <button class="top-tab" onclick="switchTopTab('board-tab')">Wealth Manager Cards</button>
-      <button class="top-tab" onclick="switchTopTab('pipeline-tab')">WM Pipeline</button>
-      <button class="top-tab" onclick="switchTopTab('analytics-tab')">Analytics</button>
-      <button class="top-tab" onclick="switchTopTab('insights-tab')">Insights</button>
+      <button class="top-tab active" onclick="switchTopTab('kpis-tab')">KPIs</button>
+      <button class="top-tab" onclick="switchTopTab('wm-pipeline-tab')">Pipeline</button>
+      <button class="top-tab" onclick="switchTopTab('pipeline-tab')">Sentiment Analysis</button>
+      <button class="top-tab" onclick="switchTopTab('analytics-tab')" style="display:none">Analytics</button>
+      <button class="top-tab" onclick="switchTopTab('insights-tab')" style="display:none">Insights</button>
     </div>
   </div>
   <div class="theme-controls">
-    <button class="theme-btn" onclick="toggleEditMode()" id="edit-toggle" title="Edit mode — rename columns and sections">&#9998;</button>
+    <div class="user-badge" id="user-badge-el" style="display:none">
+      <span class="user-avatar" id="user-avatar-el"></span>
+      <span class="user-name-text" id="user-name-el"></span>
+      <a href="/logout" class="logout-link" title="Sign out">&#x2192;</a>
+    </div>
+    <button class="theme-btn" onclick="toggleEditMode()" id="edit-toggle" title="Edit mode">&#9998;</button>
     <button class="theme-btn" onclick="openImportModal()" id="import-btn" title="Import data">&#8682;</button>
-    <button class="theme-btn notif-btn" onclick="toggleNotifications()" id="notif-toggle" title="Notifications">&#128276;<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-toggle" title="Toggle Day/Night mode">&#9790;</button>
     <select id="theme-select" class="theme-select" onchange="applyTheme(this.value)" title="Choose theme">
-      <option value="default">Midnight (Default)</option>
-      <option value="ocean">Ocean Blue</option>
-      <option value="forest">Forest Green</option>
-      <option value="sunset">Sunset Orange</option>
-      <option value="royal">Royal Purple</option>
-      <option value="rose">Rose Pink</option>
-      <option value="slate">Slate Gray</option>
+      <option value="bayut" selected>🟢 Bayut — Brand green gradient (#0d7a3f)</option>
+      <option value="default">🌙 Midnight — Navy to indigo gradient</option>
+      <option value="aurora">🌌 Aurora — Gradient teal to purple</option>
+      <option value="lava">🌋 Lava — Gradient red to orange</option>
+      <option value="ocean-gradient">🌊 Deep Sea — Gradient navy to teal</option>
+      <option value="dusk">🌆 Dusk — Gradient purple to pink sunset</option>
+      <option value="jungle">🌴 Jungle — Deep dark green gradient</option>
     </select>
   </div>
 </header>
@@ -450,7 +670,7 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
     <!-- FILTER BAR -->
     <div class="filter-strip">
       <div class="date-presets" id="date-presets">
-        <button class="preset" data-preset="daily">Daily</button>
+        <button class="preset" data-preset="daily">Yesterday</button>
         <button class="preset active" data-preset="weekly">Weekly</button>
         <button class="preset" data-preset="monthly">Monthly</button>
         <button class="preset" data-preset="quarterly">Quarterly</button>
@@ -466,8 +686,6 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
 
     <main>
 
-  <!-- WEEKLY DIGEST -->
-  <div class="digest-bar" id="digest-bar" style="display:none"></div>
 
   <!-- ═══ TAB 1: WEALTH MANAGER KPIs ═══ -->
   <div class="top-tab-content active" id="kpis-tab">
@@ -485,24 +703,27 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       <div class="card"><div class="tw"><table id="t-kpi"></table></div></div>
     </div>
 
-    <!-- WM ACTIVITY (was Overview) -->
+    <!-- WM ACTIVITY -->
     <div class="sec">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
-        <div><div class="sec-title"><span class="d" style="background:#6366f1"></span>WM Activity</div>
-        <div class="sec-sub">Key performance metrics per wealth manager</div></div>
-        <div class="export-bar"><button class="export-btn" onclick="exportTable('t-overview','WM_Activity')">&#128196; CSV</button></div>
+      <div class="sec-title"><span class="d" style="background:#6366f1"></span>WM Activity</div>
+      <div class="sec-sub">Tasks breakdown &middot; Logins &middot; Morning meetings</div>
+      <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start">
+        <div class="card" style="min-width:0"><div class="tw"><table id="t-tasks"></table></div></div>
+        <div class="card" style="min-width:0"><div class="tw"><table id="t-overview"></table></div></div>
       </div>
-      <div class="card"><div class="tw"><table id="t-overview"></table></div></div>
     </div>
 
     <!-- PRODUCTIVITY KPI -->
+    <!-- MEETINGS TREND -->
     <div class="sec">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
-        <div><div class="sec-title"><span class="d" style="background:#14b8a6"></span>Productivity KPI</div>
-        <div class="sec-sub">Conversion ratios and efficiency metrics</div></div>
-        <div class="export-bar"><button class="export-btn" onclick="exportTable('t-productivity','Productivity_KPI')">&#128196; CSV</button></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div><div class="sec-title"><span class="d" style="background:#3b82f6"></span>Meetings Trend</div>
+        <div class="sec-sub">Daily meetings done breakdown by wealth manager</div></div>
+        <select id="meetings-trend-wm" onchange="renderMeetingsTrend()" style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;min-width:170px">
+          <option value="">All Wealth Managers</option>
+        </select>
       </div>
-      <div class="card"><div class="tw"><table id="t-productivity"></table></div></div>
+      <div class="card"><div id="ch-meetings-trend" style="height:300px"></div></div>
     </div>
 
     <!-- PRE-SALES CONVERSION -->
@@ -512,12 +733,22 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       <div class="card"><div class="tw"><table id="t-conversion"></table></div></div>
     </div>
 
-    <!-- TASKS BREAKDOWN -->
+    <!-- WM PROFILE CARDS -->
     <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#10b981"></span>Tasks Breakdown</div>
-      <div class="sec-sub">Investors Contacted, Calls, Messages, Meetings, Video, WhatsApp, SMS</div>
-      <div class="card"><div class="tw"><table id="t-tasks"></table></div></div>
+      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Wealth Manager Profiles</div>
+      <div class="sec-sub">Individual performance snapshot for each wealth manager</div>
+      <div class="wm-profiles" id="wm-profiles"></div>
     </div>
+
+    <!-- PRODUCTIVITY KPI (collapsible) -->
+    <div class="sec">
+      <div class="sec-title collapsible" onclick="toggleSection('productivity-body')"><span class="d" style="background:#14b8a6"></span>Productivity KPI <span class="collapse-icon" id="productivity-body-icon">&#9654;</span></div>
+      <div class="sec-sub">Click to expand &middot; Conversion ratios and efficiency metrics</div>
+      <div class="collapse-body" id="productivity-body" style="display:none">
+        <div class="card"><div class="tw"><table id="t-productivity"></table></div></div>
+      </div>
+    </div>
+
 
     <!-- PRE-SALES (collapsible) -->
     <div class="sec">
@@ -528,13 +759,15 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       </div>
     </div>
 
-    <!-- LOGINS -->
+    <!-- LOGINS (collapsible) -->
     <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#14b8a6"></span>Propforce Logins</div>
-      <div class="sec-sub">Login sessions from presence timeline</div>
-      <div class="row2">
-        <div class="card"><div id="ch-login-trend" style="height:260px"></div></div>
-        <div class="card"><div id="ch-login-bar" style="height:260px"></div></div>
+      <div class="sec-title collapsible" onclick="toggleSection('logins-body')"><span class="d" style="background:#14b8a6"></span>Propforce Logins <span class="collapse-icon" id="logins-body-icon">&#9654;</span></div>
+      <div class="sec-sub">Click to expand &middot; Login sessions from presence timeline</div>
+      <div class="collapse-body" id="logins-body" style="display:none">
+        <div class="row2">
+          <div class="card"><div id="ch-login-trend" style="height:260px"></div></div>
+          <div class="card"><div id="ch-login-bar" style="height:260px"></div></div>
+        </div>
       </div>
     </div>
 
@@ -559,11 +792,13 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       <div class="card"><div id="ch-radar" style="height:420px"></div></div>
     </div>
 
-    <!-- FUNNEL VISUALIZATION -->
+    <!-- FUNNEL VISUALIZATION (collapsible) -->
     <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#f59e0b"></span>Sales Pipeline Funnel</div>
-      <div class="sec-sub">Client journey from Inquiry to Sold — team aggregate</div>
-      <div class="card"><div id="ch-funnel-viz" style="height:350px"></div></div>
+      <div class="sec-title collapsible" onclick="toggleSection('funnel-viz-body')"><span class="d" style="background:#f59e0b"></span>Sales Pipeline Funnel <span class="collapse-icon" id="funnel-viz-body-icon">&#9654;</span></div>
+      <div class="sec-sub">Click to expand &middot; Client journey from Inquiry to Sold</div>
+      <div class="collapse-body" id="funnel-viz-body" style="display:none">
+        <div class="card"><div id="ch-funnel-viz" style="height:350px"></div></div>
+      </div>
     </div>
 
     <!-- TASK MIX -->
@@ -587,70 +822,6 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       <div class="card"><div id="ch-engagement" style="height:350px"></div></div>
     </div>
 
-  </div>
-
-  <!-- ═══ TAB: WM PIPELINE ═══ -->
-  <div class="top-tab-content" id="pipeline-tab">
-
-    <!-- PIPELINE KPI CARDS -->
-    <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#f59e0b"></span>Bayut KSA — Wealth Manager Pipeline</div>
-      <div class="sec-sub">Deal tracking across all stages &middot; Probability &amp; next steps analyzed from meeting notes</div>
-      <div class="kpi-grid" id="pipeline-kpis"></div>
-    </div>
-
-    <!-- WM FILTER CHIPS -->
-    <div class="sec" style="margin-bottom:8px">
-      <div class="pipeline-chips" id="pipeline-chips"></div>
-    </div>
-
-    <!-- STAGE FILTER + SEARCH -->
-    <div class="sec" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:12px;color:#94a3b8;font-weight:600">STAGE</span>
-        <div class="stage-filters" id="stage-filters"></div>
-        <input type="text" id="pipeline-search" placeholder="Search deal, client, stage..." oninput="filterPipeline()"
-          style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;flex:1;min-width:200px"/>
-      </div>
-      <div style="margin-top:8px;font-size:10px;color:#64748b">
-        Stage key: <span style="color:#6366f1">&#9679; Early Engagement</span> &nbsp;
-        <span style="color:#10b981">&#9679; Information Shared</span> &nbsp;
-        <span style="color:#f59e0b">&#9679; Due Diligence</span> &nbsp;
-        <span style="color:#ef4444">&#9679; Deal Making</span> &nbsp;
-        <span style="color:#94a3b8">&#9679; On Hold</span> &nbsp;
-        <span style="color:#64748b">&#9679; Paused</span>
-      </div>
-    </div>
-
-    <!-- PER-WM DEAL TABLES -->
-    <div id="pipeline-wm-tables"></div>
-
-    <!-- MEETING NOTES -->
-    <div class="sec" style="margin-top:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
-        <div>
-          <div class="sec-title" style="margin-bottom:2px"><span class="d" style="background:#6366f1"></span>Latest Meeting Notes</div>
-          <div class="sec-sub" style="margin-bottom:0">Most recent meeting updates from wealth managers</div>
-        </div>
-        <select id="notes-wm-filter" onchange="filterNotes()" style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;min-width:180px">
-          <option value="">All Wealth Managers</option>
-        </select>
-      </div>
-      <div id="pipeline-notes"></div>
-    </div>
-
-  </div>
-
-  <!-- ═══ TAB 2: WEALTH MANAGERS BOARD ═══ -->
-  <div class="top-tab-content" id="board-tab">
-
-    <!-- WM PROFILE CARDS -->
-    <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Wealth Manager Profiles</div>
-      <div class="sec-sub">Individual performance snapshot for each wealth manager</div>
-      <div class="wm-profiles" id="wm-profiles"></div>
-    </div>
-
     <!-- AGEING ALERTS -->
     <div class="sec">
       <div class="sec-title"><span class="d" style="background:#ef4444"></span>Ageing Alerts</div>
@@ -658,6 +829,77 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       <div class="ageing-grid" id="ageing-alerts"></div>
     </div>
 
+  </div>
+
+  <!-- ═══ TAB: WM PIPELINE ═══ -->
+  <div class="top-tab-content" id="pipeline-tab">
+
+    <!-- SENTIMENT / NOTE-ANALYSIS — 10 criteria (Lead Quality / Effort Quality / Pipeline Integrity) -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#0d7a3f"></span>WM Sentiment Analysis — HOD Meeting Notes (10-Criteria Scorecard)</div>
+      <div class="sec-sub" id="mna-subtitle">Lead Quality · Effort Quality · Pipeline Integrity · <span id="mna-window"></span></div>
+      <div id="mna-container" style="margin-top:14px"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: WM PIPELINE ═══ -->
+  <div class="top-tab-content" id="wm-pipeline-tab">
+    <!-- Source & generated-at banner -->
+    <div class="sec" style="margin-bottom:8px">
+      <div id="wmp-source" style="font-size:11px;color:var(--muted)"></div>
+    </div>
+    <!-- HERO KPI TILES -->
+    <div class="summary-grid" id="wmp-hero" style="grid-template-columns:repeat(6,minmax(0,1fr))"></div>
+
+    <!-- FUNNEL / DRILL-DOWN -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:var(--bayut-green)"></span>Deal Funnel</div>
+      <div class="sec-sub">Click a <b>Stage</b> → then a <b>Sub-stage</b> → to drill into each WM's deals</div>
+      <div class="card" style="padding:14px">
+        <div id="wmp-funnel-l1"></div>
+        <div id="wmp-funnel-l2" style="margin-top:14px"></div>
+        <div id="wmp-funnel-l3" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- PER-WM LEADERBOARD -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#1d6cb0"></span>Wealth Manager Leaderboard</div>
+      <div class="sec-sub">Pipeline strength per WM</div>
+      <div class="card"><div class="tw"><table id="wmp-wm-table"></table></div></div>
+    </div>
+
+    <!-- BREAKDOWNS (Investor Type / Strategy / Location) -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#d97706"></span>Breakdowns</div>
+      <div class="sec-sub">Where the pipeline concentrates</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+        <div class="card"><h3 style="font-size:.85rem;font-weight:700;color:var(--bayut-dark);margin-bottom:10px">By Investor Type</h3><div id="wmp-by-type"></div></div>
+        <div class="card"><h3 style="font-size:.85rem;font-weight:700;color:var(--bayut-dark);margin-bottom:10px">By Deal Strategy</h3><div id="wmp-by-strategy"></div></div>
+        <div class="card"><h3 style="font-size:.85rem;font-weight:700;color:var(--bayut-dark);margin-bottom:10px">By Deal Location</h3><div id="wmp-by-loc"></div></div>
+      </div>
+    </div>
+
+    <!-- SEARCHABLE DEALS TABLE -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#6d28d9"></span>All Deals</div>
+      <div class="sec-sub"><span id="wmp-deal-count"></span></div>
+      <div class="card" style="padding:14px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center">
+          <input id="wmp-search" type="text" placeholder="Search deal, investor, WM, status…" oninput="wmpFilter()" style="flex:1;min-width:220px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.72rem;height:30px">
+          <select id="wmp-fwm" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All WMs</option></select>
+          <select id="wmp-fstage" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All Stages</option></select>
+          <select id="wmp-fstatus" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All Sub-stages</option></select>
+          <select id="wmp-fstrategy" onchange="wmpFilter()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.72rem;height:30px"><option value="">All Strategies</option></select>
+        </div>
+        <div class="tw"><table id="wmp-deals-table"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 2: WEALTH MANAGERS BOARD ═══ -->
+  <div class="top-tab-content" id="board-tab">
   </div>
 
   <!-- ═══ TAB: INSIGHTS ═══ -->
@@ -674,11 +916,13 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
       </div>
     </div>
 
-    <!-- DEAL VELOCITY -->
+    <!-- DEAL VELOCITY (collapsible) -->
     <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#6366f1"></span>Deal Velocity</div>
-      <div class="sec-sub">Average time deals spend in each stage — helps identify bottlenecks</div>
-      <div class="card"><div id="ch-deal-velocity" style="height:300px"></div></div>
+      <div class="sec-title collapsible" onclick="toggleSection('velocity-body')"><span class="d" style="background:#6366f1"></span>Deal Velocity <span class="collapse-icon" id="velocity-body-icon">&#9654;</span></div>
+      <div class="sec-sub">Click to expand &middot; Average time deals spend in each stage</div>
+      <div class="collapse-body" id="velocity-body" style="display:none">
+        <div class="card"><div id="ch-deal-velocity" style="height:300px"></div></div>
+      </div>
     </div>
 
     <!-- CLIENT ENGAGEMENT HEATMAP -->
@@ -721,11 +965,24 @@ footer{text-align:center;padding:18px;font-size:11px;color:#4a5568;border-top:1p
 <footer>Wealth Manager Dashboard &middot; Team Scott Nicol &middot; Data from Propforce SA</footer>
 
 <script>
-const PL={paper_bgcolor:"transparent",plot_bgcolor:"transparent",font:{family:"-apple-system,sans-serif",color:"#94a3b8",size:11},margin:{t:10,r:16,b:56,l:50},xaxis:{gridcolor:"#1e2534",linecolor:"#2d3748",tickangle:-25,automargin:true},yaxis:{gridcolor:"#1e2534",linecolor:"#2d3748",zeroline:false},showlegend:false};
+const PL={paper_bgcolor:"transparent",plot_bgcolor:"transparent",font:{family:"-apple-system,sans-serif",color:"#94a3b8",size:11},margin:{t:10,r:16,b:56,l:50},xaxis:{gridcolor:"rgba(148,163,184,0.1)",linecolor:"rgba(148,163,184,0.15)",tickangle:-25,automargin:true},yaxis:{gridcolor:"rgba(148,163,184,0.1)",linecolor:"rgba(148,163,184,0.15)",zeroline:false},showlegend:false};
 const C=["#6366f1","#f59e0b","#10b981","#3b82f6","#ec4899","#14b8a6","#a855f7","#ef4444"];
 const CFG={responsive:true,displayModeBar:false};
 const fmt=n=>Number(n).toLocaleString();
 const fmtR=n=>{if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return fmt(n)};
+// Section 2.6: Conditional-formatting band class for a value given a series + optional floor.
+function cfClass(val,series,floor){
+  if(val===null||val===undefined||isNaN(val))return '';
+  if(floor!==undefined&&val<floor)return 'cf-red';
+  const s=(series||[]).filter(v=>v!==null&&v!==undefined&&!isNaN(v)).slice().sort((a,b)=>a-b);
+  if(s.length<2)return '';
+  const q=(p)=>s[Math.min(s.length-1,Math.floor(p*(s.length-1)))];
+  const q1=q(0.25),med=q(0.5),q3=q(0.75);
+  if(val<q1)return 'cf-orange';
+  if(val<med)return 'cf-yellow';
+  if(val<q3)return 'cf-lgreen';
+  return 'cf-dgreen';
+}
 
 // Load WM list for dropdown + sidebar
 const avatarColorsGlobal=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
@@ -811,10 +1068,17 @@ function renderDigest(D){
 function renderSummaryCards(D){
   const ov=D.overview||[];const kd=D.kpi_dashboard||[];const sp=D.sparklines||{};
   const cols=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  // Stable per-WM color map — same WM keeps the same color across every summary tile.
+  const wmColor={};
+  ov.forEach((r,i)=>{wmColor[r.name]=cols[i%cols.length];});
+  kd.forEach(r=>{if(!wmColor[r.name])wmColor[r.name]=cols[Object.keys(wmColor).length%cols.length];});
+  const colorOf=name=>wmColor[name]||cols[0];
   const totalLeads=ov.reduce((a,r)=>a+(r.leads_added||0),0);
-  const totalTasks=ov.reduce((a,r)=>a+(r.tasks_added||0),0);
-  const totalCalls=kd.reduce((a,r)=>a+(r.qualified_calls||0),0);
+  const totalWorkedOn=ov.reduce((a,r)=>a+(r.leads_worked_on||0),0);
   const totalMtgs=kd.reduce((a,r)=>a+(r.meetings_conducted||0),0);
+  const totalIB=kd.reduce((a,r)=>a+(r.ib_shared||0),0);
+  const totalIS=kd.reduce((a,r)=>a+(r.is_shared||0),0);
+  const totalIM=kd.reduce((a,r)=>a+(r.im_shared||0),0);
 
   // Card 1: Team Leads + sparkline trend
   const allLeadDays={};ov.forEach(r=>{const s=sp[r.name];if(s&&s.leads)s.leads.forEach((v,i)=>{allLeadDays[i]=(allLeadDays[i]||0)+v;});});
@@ -828,38 +1092,54 @@ function renderSummaryCards(D){
     return `<div style="flex:1;text-align:center"><div class="sc-bar" style="height:${pct}%;background:${cols[i%cols.length]}"></div><div class="sc-bar-label">${r.name.split(' ')[0]}</div></div>`;
   }).join('');
 
-  // Card 3: Qualified Calls + donut split
-  const callData=kd.filter(r=>(r.qualified_calls||0)>0).sort((a,b)=>(b.qualified_calls||0)-(a.qualified_calls||0));
-  const donutSVG=buildMiniDonut(callData.map(r=>r.qualified_calls||0),callData.map((r,i)=>cols[i%cols.length]),40);
-  const callLegend=callData.map((r,i)=>`<span class="sc-legend-dot" style="background:${cols[i%cols.length]}"></span>${r.name.split(' ')[0]}: ${r.qualified_calls||0}`).join('<br>');
+  // Helper: horizontal stacked bar showing WM contribution
+  function miniStackedBar(data, total){
+    if(!data.length||!total)return '<div style="height:8px;background:#1e2534;border-radius:4px"></div>';
+    let bar='<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:6px">';
+    data.forEach(d=>{const pct=Math.round(d.val/total*100);bar+=`<div style="width:${pct}%;background:${colorOf(d.name)}" title="${d.name}: ${d.val}"></div>`;});
+    bar+='</div>';
+    const legend=data.map(d=>`<span style="font-size:9px;color:var(--text-muted)"><span class="sc-legend-dot" style="background:${colorOf(d.name)}"></span>${d.name.split(' ')[0]}: ${d.val}</span>`).join(' ');
+    return bar+legend;
+  }
 
-  // Card 4: Meetings + progress bars per WM
-  const maxMtg=Math.max(...kd.map(r=>r.meetings_conducted||0))||1;
-  const mtgBars=kd.filter(r=>(r.meetings_conducted||0)>0).sort((a,b)=>(b.meetings_conducted||0)-(a.meetings_conducted||0)).map((r,i)=>{
-    const pct=Math.round((r.meetings_conducted||0)/maxMtg*100);
-    return `<div class="sc-prog-row"><span class="sc-prog-name">${r.name.split(' ')[0]}</span><div class="sc-prog-bar"><div class="sc-prog-fill" style="width:${pct}%;background:${cols[i%cols.length]}"></div></div><span class="sc-prog-val">${r.meetings_conducted||0}</span></div>`;
-  }).join('');
+  // Card data per WM
+  const leadsData=ov.filter(r=>(r.leads_added||0)>0).sort((a,b)=>b.leads_added-a.leads_added).map(r=>({name:r.name,val:r.leads_added}));
+  const workedData=ov.filter(r=>(r.leads_worked_on||0)>0).sort((a,b)=>b.leads_worked_on-a.leads_worked_on).map(r=>({name:r.name,val:r.leads_worked_on}));
+  const mtgData=kd.filter(r=>(r.meetings_conducted||0)>0).sort((a,b)=>b.meetings_conducted-a.meetings_conducted).map(r=>({name:r.name,val:r.meetings_conducted}));
+  const ibData=kd.filter(r=>(r.ib_shared||0)>0).sort((a,b)=>b.ib_shared-a.ib_shared).map(r=>({name:r.name,val:r.ib_shared}));
+  const isData=kd.filter(r=>(r.is_shared||0)>0).sort((a,b)=>b.is_shared-a.is_shared).map(r=>({name:r.name,val:r.is_shared}));
+  const imData=kd.filter(r=>(r.im_shared||0)>0).sort((a,b)=>b.im_shared-a.im_shared).map(r=>({name:r.name,val:r.im_shared}));
 
   document.getElementById('summary-cards').innerHTML=`
     <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'leads_added')">
-      <div class="sc-label">Team Leads</div>
+      <div class="sc-label">Total Leads Added</div>
       <div class="sc-top"><div class="sc-value" data-count="${totalLeads}">0</div></div>
-      <div class="sc-chart">${leadSparkHtml}</div>
+      <div class="sc-chart">${miniStackedBar(leadsData, totalLeads)}</div>
     </div>
-    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'tasks_added')">
-      <div class="sc-label">Team Tasks</div>
-      <div class="sc-top"><div class="sc-value" data-count="${totalTasks}">0</div></div>
-      <div class="sc-chart"><div class="sc-bars">${taskBars||'<span style="color:#64748b;font-size:11px">No tasks</span>'}</div></div>
-    </div>
-    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'qualified_calls')">
-      <div class="sc-label">Qualified Calls</div>
-      <div class="sc-top"><div class="sc-value" data-count="${totalCalls}">0</div></div>
-      <div class="sc-chart"><div class="sc-donut">${donutSVG}<div class="sc-legend">${callLegend||'<span style="color:#64748b">No calls</span>'}</div></div></div>
+    <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'leads_worked_on')">
+      <div class="sc-label">Total Leads Worked On</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalWorkedOn}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(workedData, totalWorkedOn)}</div>
     </div>
     <div class="summary-card" style="cursor:pointer" onclick="drillMetric(null,'meetings_conducted')">
-      <div class="sc-label">Meetings</div>
+      <div class="sc-label">Total Meetings Done</div>
       <div class="sc-top"><div class="sc-value" data-count="${totalMtgs}">0</div></div>
-      <div class="sc-chart sc-progress">${mtgBars||'<span style="color:#64748b;font-size:11px">No meetings</span>'}</div>
+      <div class="sc-chart">${miniStackedBar(mtgData, totalMtgs)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Total IB Shared</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalIB}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(ibData, totalIB)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Total IS Shared</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalIS}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(isData, totalIS)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Total IM Shared</div>
+      <div class="sc-top"><div class="sc-value" data-count="${totalIM}">0</div></div>
+      <div class="sc-chart">${miniStackedBar(imData, totalIM)}</div>
     </div>
   `;
   document.querySelectorAll('#summary-cards .sc-value[data-count]').forEach(el=>animateNumber(el,parseInt(el.dataset.count)));
@@ -986,6 +1266,90 @@ function showTooltip(el,text){
 }
 function hideTooltip(){
   tooltipTimer=setTimeout(()=>{document.getElementById('cell-tooltip').classList.remove('visible');},100);
+}
+
+// ── Meetings Trend Chart ──
+function renderMeetingsTrend(){
+  const D=window._dashData;if(!D)return;
+  const sp=D.sparklines||{};
+  const wmFilter=(document.getElementById('meetings-trend-wm')||{}).value||'';
+  const wmCols=['#6366f1','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const typeCols={'Google Meet':'#0891b2','Zoom Call':'#0891b2','WhatsApp Video':'#0891b2','Video Meeting':'#0891b2','Online':'#0891b2','Outdoor':'#f97316','Company Office':'#2563eb','Site Office':'#059669','Walk-in':'#059669','Meeting Done':'#059669','Events':'#7c3aed','PSE':'#7c3aed','Gala':'#7c3aed','Other':'#94a3b8'};
+  const wmNames=(D.overview||[]).map(r=>r.name);
+
+  if(wmFilter){
+    // Single WM — stacked bar by meeting TYPE
+    const wmSp=sp[wmFilter]||{};
+    const dates=wmSp.meetings_dates||[];
+    const breakdown=wmSp.meetings_breakdown||{};
+
+    if(dates.length>0){
+      // Collect all meeting types
+      const allTypes=new Set();
+      Object.values(breakdown).forEach(dayData=>{Object.keys(dayData).forEach(t=>allTypes.add(t));});
+      const types=[...allTypes];
+
+      const traces=types.map(t=>({
+        x:dates,
+        y:dates.map(d=>(breakdown[d]||{})[t]||0),
+        type:'bar',name:t,width:0.15,
+        marker:{color:typeCols[t]||'#94a3b8'},
+        hovertemplate:'%{x}<br>'+t+': %{y}<extra></extra>'
+      }));
+      // Add wave line for totals
+      const totals=dates.map(d=>{let s=0;types.forEach(t=>{s+=(breakdown[d]||{})[t]||0;});return s;});
+      traces.push({x:dates,y:totals,type:'scatter',mode:'lines+markers',name:'Total',
+        line:{color:'#f59e0b',width:1.5,shape:'spline',smoothing:1.3},marker:{size:4,color:'#f59e0b'},
+        hovertemplate:'%{x}: %{y} total<extra></extra>'});
+
+      Plotly.newPlot("ch-meetings-trend",traces,{...PL,barmode:'stack',showlegend:true,
+        legend:{font:{size:10,color:'var(--text-muted)'},bgcolor:'transparent',orientation:'h',y:1.15},
+        xaxis:{...PL.xaxis,type:'category',title:{text:'Date',font:{size:10,color:'var(--text-muted)'}}},
+        yaxis:{...PL.yaxis,title:{text:'Meetings',font:{size:10,color:'var(--text-muted)'}}},
+        title:{text:wmFilter+' — Daily Meetings by Type',font:{size:13,color:'var(--text-heading)'},x:0.01,y:0.98,yanchor:'top'},
+        margin:{t:60,r:16,b:60,l:50}},CFG);
+    } else {
+      Plotly.newPlot("ch-meetings-trend",[],{...PL,
+        title:{text:wmFilter+' — No meeting data',font:{size:13,color:'#64748b'},x:0.01,y:0.98,yanchor:'top'},
+        margin:{t:55,r:16,b:30,l:50}},CFG);
+    }
+  } else {
+    // All WMs — stacked bar by WM
+    const allDates=new Set();
+    const wmData={};
+    wmNames.forEach(name=>{
+      const ws=sp[name]||{};
+      const vals=ws.meetings||[];
+      const dates=ws.meetings_dates||[];
+      wmData[name]={};
+      dates.forEach((d,i)=>{allDates.add(d);wmData[name][d]=vals[i]||0;});
+    });
+    const sortedDates=[...allDates].sort();
+    if(sortedDates.length>0){
+      const traces=wmNames.map((name,i)=>({
+        x:sortedDates,
+        y:sortedDates.map(d=>wmData[name]?.[d]||0),
+        type:'bar',name:name.split(' ')[0],width:0.15,
+        marker:{color:wmCols[i%wmCols.length]},
+        hovertemplate:'%{x}: %{y} meetings<extra>'+name+'</extra>'
+      })).filter(t=>t.y.some(v=>v>0));
+      // Add wave line for daily totals
+      const dailyTotals=sortedDates.map(d=>{let s=0;wmNames.forEach(n=>{s+=(wmData[n]?.[d]||0);});return s;});
+      traces.push({x:sortedDates,y:dailyTotals,type:'scatter',mode:'lines+markers',name:'Total',
+        line:{color:'#f59e0b',width:1.5,shape:'spline',smoothing:1.3},marker:{size:4,color:'#f59e0b'},
+        hovertemplate:'%{x}: %{y} total<extra></extra>'});
+      Plotly.newPlot("ch-meetings-trend",traces,{...PL,barmode:'stack',showlegend:true,
+        legend:{font:{size:10,color:'var(--text-muted)'},bgcolor:'transparent',orientation:'h',y:1.15},
+        xaxis:{...PL.xaxis,type:'category',title:{text:'Date',font:{size:10,color:'var(--text-muted)'}}},
+        yaxis:{...PL.yaxis,title:{text:'Meetings',font:{size:10,color:'var(--text-muted)'}}},
+        title:{text:'Daily Meetings Done — All WMs',font:{size:13,color:'var(--text-heading)'},x:0.01,y:0.98,yanchor:'top'},
+        margin:{t:60,r:16,b:60,l:50}},CFG);
+    } else {
+      Plotly.newPlot("ch-meetings-trend",[],{...PL,
+        title:{text:'No meeting data for this period',font:{size:13,color:'#64748b'},x:0.01,y:0.98,yanchor:'top'},
+        margin:{t:55,r:16,b:30,l:50}},CFG);
+    }
+  }
 }
 
 // ── Export CSV ──
@@ -1120,28 +1484,32 @@ function checkNotifications(D){
   }
 }
 
-// Theme toggle
+// Theme toggle (button removed; function kept for backward-compat)
 function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight=document.body.classList.contains('light');
-  document.getElementById('theme-toggle').innerHTML=isLight?'&#9728;':'&#9790;';
+  const tt=document.getElementById('theme-toggle');if(tt)tt.innerHTML=isLight?'&#9728;':'&#9790;';
   localStorage.setItem('wm-theme',isLight?'light':'dark');
-  // Re-render charts with updated colors
   window.dispatchEvent(new Event('resize'));
 }
-// Restore theme
-if(localStorage.getItem('wm-theme')==='light'){document.body.classList.add('light');document.getElementById('theme-toggle').innerHTML='&#9728;';}
+if(localStorage.getItem('wm-theme')==='light'){document.body.classList.add('light');const tt=document.getElementById('theme-toggle');if(tt)tt.innerHTML='&#9728;';}
 
 // Theme selector
-const THEMES=['default','ocean','forest','sunset','royal','rose','slate'];
+const THEMES=['default','ocean','forest','sunset','royal','rose','slate','noir','cyber','nord','copper','aurora','lava','ocean-gradient','dusk','jungle','bayut'];
 function applyTheme(theme){
   THEMES.forEach(t=>document.body.classList.remove('theme-'+t));
   if(theme!=='default') document.body.classList.add('theme-'+theme);
   localStorage.setItem('wm-color-theme',theme);
 }
 // Restore saved theme
-const savedTheme=localStorage.getItem('wm-color-theme');
-if(savedTheme){document.getElementById('theme-select').value=savedTheme;applyTheme(savedTheme);}
+// One-time migration: force Bayut as default once per version bump
+const THEME_RESET_VERSION='2026-04-20-bayut';
+if(localStorage.getItem('wm-theme-reset')!==THEME_RESET_VERSION){
+  localStorage.setItem('wm-color-theme','bayut');
+  localStorage.setItem('wm-theme-reset',THEME_RESET_VERSION);
+}
+const savedTheme=localStorage.getItem('wm-color-theme')||'bayut';
+document.getElementById('theme-select').value=savedTheme;applyTheme(savedTheme);
 
 // Top tabs
 let insightsRendered=false;
@@ -1171,15 +1539,15 @@ function switchTopTab(tabId){
 function setPreset(preset){
   const today=new Date();
   const y=today.getFullYear(),m=today.getMonth(),d=today.getDate();
-  let start;
-  if(preset==='daily'){start=new Date(y,m,d);}
+  let start,end=today;
+  if(preset==='daily'){start=new Date(y,m,d-1);end=new Date(y,m,d-1);}
   else if(preset==='weekly'){start=new Date(y,m,d-6);}
   else if(preset==='monthly'){start=new Date(y,m,1);}
   else if(preset==='quarterly'){start=new Date(y,m-((m%3)),1);}
   else if(preset==='yearly'){start=new Date(y,0,1);}
   const fmt2=dt=>dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
   document.getElementById('f-start').value=fmt2(start);
-  document.getElementById('f-end').value=fmt2(today);
+  document.getElementById('f-end').value=fmt2(end);
   document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
   const btn=document.querySelector(`.preset[data-preset="${preset}"]`);
   if(btn)btn.classList.add('active');
@@ -1210,43 +1578,59 @@ function loadData(){
   });
 }
 
-function tbl(id,headers,rows,footRow){
+// cfCols: optional array of 0-based column indices that should get conditional-formatting bands.
+function tbl(id,headers,rows,footRow,cfCols){
+  const cfSeries={};
+  const parseNum=v=>typeof v==='number'?v:(parseFloat(String(v==null?'':v).replace(/[,%\$]/g,''))||0);
+  if(cfCols&&cfCols.length){cfCols.forEach(ci=>{cfSeries[ci]=rows.map(r=>parseNum(r[ci]));});}
   const th="<thead><tr>"+headers.map(h=>`<th class="${h[1]||''}">${h[0]}</th>`).join("")+"</tr></thead>";
-  const tb="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td class="${headers[i][1]||''}">${c}</td>`).join("")+"</tr>").join("")+"</tbody>";
+  const tb="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>{
+    let cls=headers[i][1]||'';
+    if(cfSeries[i]){const band=cfClass(parseNum(c),cfSeries[i],1);if(band)cls+=(cls?' ':'')+band;}
+    return `<td class="${cls}">${c}</td>`;
+  }).join("")+"</tr>").join("")+"</tbody>";
   const tf=footRow?"<tfoot><tr>"+footRow.map((c,i)=>`<td class="${i===0?'':'nb'}">${c}</td>`).join("")+"</tr></tfoot>":"";
   document.getElementById(id).innerHTML=th+tb+tf;
 }
 function sc(rows,k){return rows.reduce((a,r)=>a+(r[k]||0),0)}
 
 function render(D){
+  window._dashData=D;
   insightsRendered=false;analyticsRendered=false;
   try{checkNotifications(D);}catch(e){console.error('Notification error:',e);}
   try{renderDigest(D);}catch(e){console.error('Digest error:',e);}
   try{renderSummaryCards(D);}catch(e){console.error('Summary cards error:',e);}
   // KPIs
-  // WM Activity (with sparklines + clickable cells)
+  // WM Activity (3 columns: PF Logins, Morning Sched, Morning Att)
   {
-    const ov=D.overview;const kd=D.kpi_dashboard;const kdMap={};kd.forEach(r=>kdMap[r.name]=r);
-    const sp=D.sparklines||{};
-    const thead=`<thead><tr><th>Name</th><th class="nb">Clients Added</th><th class="n">Qualified Clients</th><th class="nb">Tasks Added</th><th style="width:50px;max-width:50px;padding:4px 2px;font-size:9px">Trend</th><th class="nb">Meetings Conducted</th><th class="n">PF Logins</th><th class="n">Morning Sched</th><th class="n">Morning Att</th></tr></thead>`;
+    const ov=D.overview;
+    const thead=`<thead><tr><th>Name</th><th class="n">PF Logins</th><th class="n">Morning Sched</th><th class="n">Morning Att</th></tr></thead>`;
+    const ovS={pf_logins:ov.map(r=>r.pf_logins||0),morning_scheduled:ov.map(r=>r.morning_scheduled||0),morning_attended:ov.map(r=>r.morning_attended||0)};
     const tbody=ov.map(r=>{
-      const k=kdMap[r.name]||{};
-      const taskSpark=sp[r.name]&&sp[r.name].tasks?sparklineSVG(sp[r.name].tasks,44,16,'#10b981'):'';
       const n=r.name.replace(/'/g,"\\'");
       return `<tr>
         <td style="font-weight:600">${r.name}</td>
-        <td class="nb">${fmt(k.clients_added||0)}</td>
-        <td class="n">${fmt(k.qualified_clients||0)}</td>
-        <td class="nb clickable" onclick="drillMetric('${n}','tasks_added')" onmouseenter="showTooltip(this,'Click to see daily tasks')" onmouseleave="hideTooltip()">${fmt(r.tasks_added)}</td>
-        <td class="spark-col">${taskSpark}</td>
-        <td class="nb clickable" onclick="drillMetric('${n}','meetings_conducted')" onmouseenter="showTooltip(this,'Total meetings done + video')" onmouseleave="hideTooltip()">${fmt(k.meetings_conducted||0)}</td>
-        <td class="n clickable" onclick="drillMetric('${n}','pf_logins')" onmouseenter="showTooltip(this,'Unique login days')" onmouseleave="hideTooltip()">${fmt(r.pf_logins)}</td>
-        <td class="n">${fmt(r.morning_scheduled)}</td>
-        <td class="n">${fmt(r.morning_attended)}</td>
+        <td class="n clickable ${cfClass(r.pf_logins||0,ovS.pf_logins,1)}" onclick="drillMetric('${n}','pf_logins')" onmouseenter="showTooltip(this,'Unique login days')" onmouseleave="hideTooltip()">${fmt(r.pf_logins)}</td>
+        <td class="n ${cfClass(r.morning_scheduled||0,ovS.morning_scheduled,1)}">${fmt(r.morning_scheduled)}</td>
+        <td class="n ${cfClass(r.morning_attended||0,ovS.morning_attended,1)}">${fmt(r.morning_attended)}</td>
       </tr>`;
     }).join('');
-    const tf=`<tfoot><tr><td>TOTAL</td><td class="nb">${fmt(kd.reduce((a,r)=>a+(r.clients_added||0),0))}</td><td class="nb">${fmt(kd.reduce((a,r)=>a+(r.qualified_clients||0),0))}</td><td class="nb">${fmt(sc(ov,"tasks_added"))}</td><td></td><td class="nb">${fmt(kd.reduce((a,r)=>a+(r.meetings_conducted||0),0))}</td><td class="nb">${fmt(sc(ov,"pf_logins"))}</td><td class="nb">${fmt(sc(ov,"morning_scheduled"))}</td><td class="nb">${fmt(sc(ov,"morning_attended"))}</td></tr></tfoot>`;
+    const oLen=ov.length||1;
+    const tf=`<tfoot><tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)"><td>TOTAL</td><td class="nb">${fmt(sc(ov,"pf_logins"))}</td><td class="nb">${fmt(sc(ov,"morning_scheduled"))}</td><td class="nb">${fmt(sc(ov,"morning_attended"))}</td></tr>
+    <tr style="font-weight:600;color:#fbbf24;font-size:11px"><td>TEAM AVG</td><td class="n">${Math.round(sc(ov,"pf_logins")/oLen*10)/10}</td><td class="n">${Math.round(sc(ov,"morning_scheduled")/oLen*10)/10}</td><td class="n">${Math.round(sc(ov,"morning_attended")/oLen*10)/10}</td></tr></tfoot>`;
     document.getElementById('t-overview').innerHTML=thead+'<tbody>'+tbody+'</tbody>'+tf;
+  }
+
+  // Meetings Trend — populate WM filter and render
+  {
+    const sel=document.getElementById('meetings-trend-wm');
+    if(sel){
+      sel.innerHTML='<option value="">All Wealth Managers</option>';
+      (D.overview||[]).forEach(r=>{
+        const o=document.createElement('option');o.value=r.name;o.textContent=r.name;sel.appendChild(o);
+      });
+    }
+    renderMeetingsTrend();
   }
 
   // Ageing Alerts (card style)
@@ -1302,7 +1686,15 @@ function render(D){
     const ovMap={};D.overview.forEach(r=>ovMap[r.name]=r);
     const pk=D.productivity_kpi;const pkMap={};pk.forEach(r=>pkMap[r.name]=r);
     const ck=D.conversion_kpi;const ckMap={};ck.forEach(r=>ckMap[r.name]=r);
-    const cards=kd.map(r=>{
+    kd.sort((a,b)=>(ovMap[b.name]||{}).leads_worked_on-(ovMap[a.name]||{}).leads_worked_on||0);
+    const wmColors=[
+      {bg:'linear-gradient(135deg,#6366f1,#4f46e5)',border:'#6366f1',light:'rgba(99,102,241,.08)'},
+      {bg:'linear-gradient(135deg,#f59e0b,#d97706)',border:'#f59e0b',light:'rgba(245,158,11,.08)'},
+      {bg:'linear-gradient(135deg,#10b981,#059669)',border:'#10b981',light:'rgba(16,185,129,.08)'},
+      {bg:'linear-gradient(135deg,#3b82f6,#2563eb)',border:'#3b82f6',light:'rgba(59,130,246,.08)'},
+      {bg:'linear-gradient(135deg,#ec4899,#db2777)',border:'#ec4899',light:'rgba(236,72,153,.08)'},
+    ];
+    const cards=kd.map((r,idx)=>{
       const ov=ovMap[r.name]||{};
       const pr=pkMap[r.name]||{};
       const cv=ckMap[r.name]||{};
@@ -1311,31 +1703,24 @@ function render(D){
       const convBadge=r.deals_closed>0?`${Math.round(r.deals_closed/(ov.leads_added||1)*100)}% conv.`:'0% conv.';
       const convClass=r.deals_closed>0?'':'zero';
       const revStr=r.revenue>=1e6?(r.revenue/1e6).toFixed(2)+'M':r.revenue>=1e3?(r.revenue/1e3).toFixed(0)+'K':fmt(r.revenue);
-      return `<div class="wm-card">
+      const wc=wmColors[idx%wmColors.length];
+      return `<div class="wm-card" style="border-top:3px solid ${wc.border};background:${wc.light}" onmouseenter="this.style.borderColor='${wc.border}'" onmouseleave="this.style.borderColor='var(--border)';this.style.borderTopColor='${wc.border}'">
         <div class="wm-card-header">
-          <div class="wm-avatar">${initials}</div>
+          <div class="wm-avatar" style="background:${wc.bg}">${initials}</div>
           <div class="wm-info">
             <div class="wm-name">${r.name}</div>
             <div class="wm-role">WM &middot; Team Scott Nicol</div>
           </div>
           <div class="wm-conv-badge ${convClass}">${convBadge}</div>
         </div>
-        <div class="wm-highlights">
-          <div class="wm-highlight"><div class="hl-value green">$${revStr}</div><div class="hl-label">Revenue</div></div>
-          <div class="wm-highlight"><div class="hl-value yellow">${r.active_client_pct}%</div><div class="hl-label">Active %</div><div class="progress-bar"><div class="fill" style="width:${r.active_client_pct}%;background:${r.active_client_pct>=75?'#10b981':r.active_client_pct>=50?'#fbbf24':'#ef4444'}"></div></div></div>
-          <div class="wm-highlight"><div class="hl-value blue">${imRate}%</div><div class="hl-label">IM Accept</div></div>
-        </div>
         <div class="wm-stats">
           <div class="wm-stats-left">
-            <div class="wm-stat"><span class="stat-label">Total clients</span><span class="stat-value">${fmt(r.clients_added)}</span></div>
-            <div class="wm-stat"><span class="stat-label">Qualified</span><span class="stat-value">${fmt(r.qualified_clients)}</span></div>
-            <div class="wm-stat"><span class="stat-label">Meetings</span><span class="stat-value">${fmt(r.meetings_conducted)}</span></div>
-            <div class="wm-stat"><span class="stat-label">IM shared</span><span class="stat-value">${fmt(r.im_shared)}</span></div>
-          </div>
-          <div class="wm-stats-right">
-            <div class="wm-stat"><span class="stat-label">Active</span><span class="stat-value">${fmt(ov.leads_added||0)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Total clients added</span><span class="stat-value">${fmt(r.clients_added)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Total leads worked on</span><span class="stat-value">${fmt(ov.leads_worked_on||0)}</span></div>
+            <div class="wm-stat"><span class="stat-label">Total meetings done</span><span class="stat-value">${fmt(r.meetings_conducted)}</span></div>
             <div class="wm-stat"><span class="stat-label">Qualified calls</span><span class="stat-value">${fmt(r.qualified_calls||0)}</span></div>
             <div class="wm-stat"><span class="stat-label">IS shared</span><span class="stat-value">${fmt(r.is_shared)}</span></div>
+            <div class="wm-stat"><span class="stat-label">IM shared</span><span class="stat-value">${fmt(r.im_shared)}</span></div>
             <div class="wm-stat"><span class="stat-label">Deals closed</span><span class="stat-value">${fmt(r.deals_closed)}</span></div>
           </div>
         </div>
@@ -1350,36 +1735,68 @@ function render(D){
     if(kd && kd.length){
       const groupH=`<tr class="kpi-group-header">
         <th class="kpi-id" rowspan="1">IDENTITY</th>
-        <th class="kpi-act" colspan="6">ACTIVITY KPIs</th>
+        <th class="kpi-act" colspan="4">ACTIVITY KPIs</th>
         <th class="kpi-prop" colspan="3">PROPOSAL KPIs</th>
         <th class="kpi-pipe" colspan="2">PIPELINE & REVENUE</th>
       </tr>`;
       const colH=`<tr>
         <th>Name</th>
-        <th class="n">Leads Added</th><th style="width:50px;max-width:50px;padding:4px 2px;font-size:9px">Trend</th><th class="n">Leads Worked On</th><th class="n">Qualified Calls</th><th class="n">Unique Meetings</th>
+        <th class="n">Leads Added</th><th class="n">Leads Worked On</th><th class="n">Call &amp; Messages</th><th class="n">Total Meetings</th>
         <th class="n">IB Shared</th><th class="n">IS Shared</th><th class="n">IM Shared</th>
         <th class="n">Deals Closed</th><th class="n">Revenue ($)</th>
       </tr>`;
       const ovMap={};D.overview.forEach(r=>ovMap[r.name]=r);
+      const tbMap={};(D.task_breakdown||[]).forEach(r=>tbMap[r.name]=r);
       const sp=D.sparklines||{};
+      kd.sort((a,b)=>(ovMap[b.name]||{}).leads_worked_on-(ovMap[a.name]||{}).leads_worked_on||0);
+      // Total Meetings = Video Meetings + Meeting Done (from task_breakdown)
+      const totalMeetingsOf=name=>{const tb=tbMap[name]||{};return (tb['Video Meetings']||0)+(tb['Meeting Done']||0);};
+      // Call & Messages = Call + Message + WhatsApp + SMS. Follow-Up is a subset of
+      // Call + Message (follow_up_call lives inside Call, follow_up_message inside
+      // Message), so including it would double-count — it's already covered.
+      const callMsgOf=name=>{const tb=tbMap[name]||{};return (tb['Call']||0)+(tb['Message']||0)+(tb['WhatsApp']||0)+(tb['SMS']||0);};
+      // Pre-compute per-column series for conditional-formatting bands (Section 2.6)
+      const cfSeries={
+        leads_added: kd.map(r=>(ovMap[r.name]||{}).leads_added||0),
+        leads_worked_on: kd.map(r=>(ovMap[r.name]||{}).leads_worked_on||0),
+        call_messages: kd.map(r=>callMsgOf(r.name)),
+        total_meetings: kd.map(r=>totalMeetingsOf(r.name)),
+        ib_shared: kd.map(r=>r.ib_shared||0),
+        is_shared: kd.map(r=>r.is_shared||0),
+        im_shared: kd.map(r=>r.im_shared||0),
+        deals_closed: kd.map(r=>r.deals_closed||0),
+      };
       const tbody=kd.map(r=>{const ov=ovMap[r.name]||{};
-        const leadSpark=sp[r.name]&&sp[r.name].leads?sparklineSVG(sp[r.name].leads,44,16,'#6366f1'):'';
+        const v={leads_added:ov.leads_added||0,leads_worked_on:ov.leads_worked_on||0,call_messages:callMsgOf(r.name),total_meetings:totalMeetingsOf(r.name),ib_shared:r.ib_shared||0,is_shared:r.is_shared||0,im_shared:r.im_shared||0,deals_closed:r.deals_closed||0};
         return `<tr>
           <td>${r.name}</td>
-          <td class="nb clickable" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(ov.leads_added||0)}</td><td>${leadSpark}</td><td class="nb clickable" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(ov.leads_worked_on||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','qualified_calls')" onmouseenter="showTooltip(this,'Calls with 60s+ talk time')" onmouseleave="hideTooltip()">${fmt(r.qualified_calls||0)}</td><td class="nb clickable" onclick="drillMetric('${r.name}','unique_meetings')" onmouseenter="showTooltip(this,'Unique client meetings (1 per lead)')" onmouseleave="hideTooltip()">${fmt(ov.unique_meetings||0)}</td>
-          <td class="n">${fmt(r.ib_shared)}</td><td class="n">${fmt(r.is_shared)}</td><td class="n">${fmt(r.im_shared)}</td>
-          <td class="nb">${fmt(r.deals_closed)}</td><td class="nb">${fmtR(r.revenue)}</td>
+          <td class="nb clickable ${cfClass(v.leads_added,cfSeries.leads_added,1)}" onclick="drillMetric('${r.name}','leads_added')" onmouseenter="showTooltip(this,'Click to see daily breakdown')" onmouseleave="hideTooltip()">${fmt(v.leads_added)}</td><td class="nb clickable ${cfClass(v.leads_worked_on,cfSeries.leads_worked_on,1)}" onclick="drillMetric('${r.name}','leads_worked_on')" onmouseenter="showTooltip(this,'Leads with tasks added')" onmouseleave="hideTooltip()">${fmt(v.leads_worked_on)}</td><td class="nb ${cfClass(v.call_messages,cfSeries.call_messages,1)}" onmouseenter="showTooltip(this,'Call + Message + WhatsApp + SMS (Follow-Up already inside Call/Message)')" onmouseleave="hideTooltip()">${fmt(v.call_messages)}</td><td class="nb ${cfClass(v.total_meetings,cfSeries.total_meetings,1)}" onmouseenter="showTooltip(this,'Video Meetings + Meeting Done')" onmouseleave="hideTooltip()">${fmt(v.total_meetings)}</td>
+          <td class="n ${cfClass(v.ib_shared,cfSeries.ib_shared,1)}">${fmt(v.ib_shared)}</td><td class="n ${cfClass(v.is_shared,cfSeries.is_shared,1)}">${fmt(v.is_shared)}</td><td class="n ${cfClass(v.im_shared,cfSeries.im_shared,1)}">${fmt(v.im_shared)}</td>
+          <td class="nb ${cfClass(v.deals_closed,cfSeries.deals_closed,1)}">${fmt(v.deals_closed)}</td><td class="nb">${fmtR(r.revenue)}</td>
         </tr>`;}).join("");
       const len=kd.length;
-      const avg=(key)=>len?Math.round(kd.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
-      const ovAvg=(key)=>{const vals=D.overview;return vals.length?Math.round(vals.reduce((a,r)=>a+(r[key]||0),0)/vals.length*10)/10:0;};
-      const tavg=`<tr style="border-top:2px solid #f59e0b;font-weight:700;color:#fbbf24;">
-        <td>TEAM AVERAGE</td>
-        <td class="nb clickable" onclick="drillMetric(null,'leads_added')">${ovAvg('leads_added')}</td><td></td><td class="nb clickable" onclick="drillMetric(null,'leads_worked_on')">${ovAvg('leads_worked_on')}</td><td class="nb clickable" onclick="drillMetric(null,'qualified_calls')">${avg('qualified_calls')}</td><td class="nb clickable" onclick="drillMetric(null,'unique_meetings')">${ovAvg('unique_meetings')}</td>
-        <td class="n">${avg('ib_shared')}</td><td class="n">${avg('is_shared')}</td><td class="n">${avg('im_shared')}</td>
-        <td class="nb">${avg('deals_closed')}</td><td class="nb">${fmtR(avg('revenue'))}</td>
-      </tr>`;
-      document.getElementById("t-kpi").innerHTML=`<thead>${groupH}${colH}</thead><tbody>${tbody}</tbody><tfoot>${tavg}</tfoot>`;
+      const sum=(key)=>kd.reduce((a,r)=>a+(r[key]||0),0);
+      const avg=(key)=>len?Math.round(sum(key)/len*10)/10:0;
+      const ovSum=(key)=>D.overview.reduce((a,r)=>a+(r[key]||0),0);
+      const ovAvg=(key)=>{const vals=D.overview;return vals.length?Math.round(ovSum(key)/vals.length*10)/10:0;};
+      const totMeetSum=kd.reduce((a,r)=>a+totalMeetingsOf(r.name),0);
+      const totMeetAvg=len?Math.round(totMeetSum/len*10)/10:0;
+      const callMsgSum=kd.reduce((a,r)=>a+callMsgOf(r.name),0);
+      const callMsgAvg=len?Math.round(callMsgSum/len*10)/10:0;
+      const tfoot=`
+        <tr style="border-top:2px solid #f59e0b;font-weight:700;color:#f1f5f9;">
+          <td>TOTAL</td>
+          <td class="nb clickable" onclick="drillMetric(null,'leads_added')">${fmt(ovSum('leads_added'))}</td><td class="nb clickable" onclick="drillMetric(null,'leads_worked_on')">${fmt(ovSum('leads_worked_on'))}</td><td class="nb">${fmt(callMsgSum)}</td><td class="nb">${fmt(totMeetSum)}</td>
+          <td class="n">${fmt(sum('ib_shared'))}</td><td class="n">${fmt(sum('is_shared'))}</td><td class="n">${fmt(sum('im_shared'))}</td>
+          <td class="nb">${fmt(sum('deals_closed'))}</td><td class="nb">${fmtR(sum('revenue'))}</td>
+        </tr>
+        <tr style="font-weight:600;color:#fbbf24;font-size:11px">
+          <td>TEAM AVG</td>
+          <td class="n">${ovAvg('leads_added')}</td><td class="n">${ovAvg('leads_worked_on')}</td><td class="n">${callMsgAvg}</td><td class="n">${totMeetAvg}</td>
+          <td class="n">${avg('ib_shared')}</td><td class="n">${avg('is_shared')}</td><td class="n">${avg('im_shared')}</td>
+          <td class="n">${avg('deals_closed')}</td><td class="n">${fmtR(avg('revenue'))}</td>
+        </tr>`;
+      document.getElementById("t-kpi").innerHTML=`<thead>${groupH}${colH}</thead><tbody>${tbody}</tbody><tfoot>${tfoot}</tfoot>`;
     }
   }
 
@@ -1397,8 +1814,8 @@ function render(D){
       ]);
       const len=pk.length;
       const avg=(key)=>len?Math.round(pk.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
-      const foot=["TEAM AVERAGE",avg('calls_per_meeting')||'-',avg('meetings_per_proposal')||'-',avg('proposals_per_deal')||'-'];
-      tbl("t-productivity",h,rows,foot);
+      const foot=["TEAM AVG",avg('calls_per_meeting')||'-',avg('meetings_per_proposal')||'-',avg('proposals_per_deal')||'-'];
+      tbl("t-productivity",h,rows,foot,[1,2,3]);
     }
   }
 
@@ -1421,33 +1838,72 @@ function render(D){
         <th class="n">IB\u2192IS %</th><th class="n">IS\u2192IM %</th><th class="n">IM\u2192Close %</th>
       </tr>`;
       const rateClass=(v)=>v>=80?'cell-green':v>=50?'cell-yellow':v>0?'cell-red':'';
+      // Conditional-formatting bands for raw counts (keep rateClass for % cells)
+      const ckS={ib_shared:ck.map(r=>r.ib_shared||0),ib_accepted:ck.map(r=>r.ib_accepted||0),is_shared:ck.map(r=>r.is_shared||0),is_accepted:ck.map(r=>r.is_accepted||0),im_shared:ck.map(r=>r.im_shared||0),im_accepted:ck.map(r=>r.im_accepted||0)};
       const tbody=ck.map(r=>`<tr>
         <td>${r.name}</td>
-        <td class="n">${fmt(r.ib_shared)}</td><td class="n">${fmt(r.ib_accepted)}</td><td class="n ${rateClass(r.ib_acceptance_rate)}">${r.ib_acceptance_rate}%</td>
-        <td class="n">${fmt(r.is_shared)}</td><td class="n">${fmt(r.is_accepted)}</td><td class="n ${rateClass(r.is_acceptance_rate)}">${r.is_acceptance_rate}%</td>
-        <td class="n">${fmt(r.im_shared)}</td><td class="n">${fmt(r.im_accepted)}</td><td class="n ${rateClass(r.im_acceptance_rate)}">${r.im_acceptance_rate}%</td>
+        <td class="n ${cfClass(r.ib_shared||0,ckS.ib_shared,1)}">${fmt(r.ib_shared)}</td><td class="n ${cfClass(r.ib_accepted||0,ckS.ib_accepted,1)}">${fmt(r.ib_accepted)}</td><td class="n ${rateClass(r.ib_acceptance_rate)}">${r.ib_acceptance_rate}%</td>
+        <td class="n ${cfClass(r.is_shared||0,ckS.is_shared,1)}">${fmt(r.is_shared)}</td><td class="n ${cfClass(r.is_accepted||0,ckS.is_accepted,1)}">${fmt(r.is_accepted)}</td><td class="n ${rateClass(r.is_acceptance_rate)}">${r.is_acceptance_rate}%</td>
+        <td class="n ${cfClass(r.im_shared||0,ckS.im_shared,1)}">${fmt(r.im_shared)}</td><td class="n ${cfClass(r.im_accepted||0,ckS.im_accepted,1)}">${fmt(r.im_accepted)}</td><td class="n ${rateClass(r.im_acceptance_rate)}">${r.im_acceptance_rate}%</td>
         <td class="n ${rateClass(r.ib_to_is_rate)}">${r.ib_to_is_rate}%</td><td class="n ${rateClass(r.is_to_im_rate)}">${r.is_to_im_rate}%</td><td class="n ${rateClass(r.im_to_closure_rate)}">${r.im_to_closure_rate}%</td>
       </tr>`).join("");
       const len=ck.length;
-      const avg=(key)=>len?Math.round(ck.reduce((a,r)=>a+(r[key]||0),0)/len*10)/10:0;
-      const tavg=`<tr style="border-top:2px solid #ec4899;font-weight:700;color:#f472b6;">
-        <td>TEAM AVERAGE</td>
-        <td class="n">${avg('ib_shared')}</td><td class="n">${avg('ib_accepted')}</td><td class="n">${avg('ib_acceptance_rate')}%</td>
-        <td class="n">${avg('is_shared')}</td><td class="n">${avg('is_accepted')}</td><td class="n">${avg('is_acceptance_rate')}%</td>
-        <td class="n">${avg('im_shared')}</td><td class="n">${avg('im_accepted')}</td><td class="n">${avg('im_acceptance_rate')}%</td>
-        <td class="n">${avg('ib_to_is_rate')}%</td><td class="n">${avg('is_to_im_rate')}%</td><td class="n">${avg('im_to_closure_rate')}%</td>
-      </tr>`;
-      document.getElementById("t-conversion").innerHTML=`<thead>${groupH}${colH}</thead><tbody>${tbody}</tbody><tfoot>${tavg}</tfoot>`;
+      const csum=(key)=>ck.reduce((a,r)=>a+(r[key]||0),0);
+      const avg=(key)=>len?Math.round(csum(key)/len*10)/10:0;
+      const tfoot=`
+        <tr style="border-top:2px solid #ec4899;font-weight:700;color:var(--text-heading);">
+          <td>TOTAL</td>
+          <td class="n">${fmt(csum('ib_shared'))}</td><td class="n">${fmt(csum('ib_accepted'))}</td><td class="n">-</td>
+          <td class="n">${fmt(csum('is_shared'))}</td><td class="n">${fmt(csum('is_accepted'))}</td><td class="n">-</td>
+          <td class="n">${fmt(csum('im_shared'))}</td><td class="n">${fmt(csum('im_accepted'))}</td><td class="n">-</td>
+          <td class="n">-</td><td class="n">-</td><td class="n">-</td>
+        </tr>
+        <tr style="font-weight:600;color:#fbbf24;font-size:11px">
+          <td>TEAM AVG</td>
+          <td class="n">${avg('ib_shared')}</td><td class="n">${avg('ib_accepted')}</td><td class="n">${avg('ib_acceptance_rate')}%</td>
+          <td class="n">${avg('is_shared')}</td><td class="n">${avg('is_accepted')}</td><td class="n">${avg('is_acceptance_rate')}%</td>
+          <td class="n">${avg('im_shared')}</td><td class="n">${avg('im_accepted')}</td><td class="n">${avg('im_acceptance_rate')}%</td>
+          <td class="n">${avg('ib_to_is_rate')}%</td><td class="n">${avg('is_to_im_rate')}%</td><td class="n">${avg('im_to_closure_rate')}%</td>
+        </tr>`;
+      document.getElementById("t-conversion").innerHTML=`<thead>${groupH}${colH}</thead><tbody>${tbody}</tbody><tfoot>${tfoot}</tfoot>`;
     }
   }
 
   // Tasks
   {
     const tk=D.task_breakdown, cols=D.task_cols;
-    const h=[["Name",""],["Investors","n"],["Total","nb"]].concat(cols.map(c=>[c,"n"]));
-    const rows=tk.map(r=>[r.name,fmt(r.investors_contacted),fmt(r.total)].concat(cols.map(c=>fmt(r[c]||0))));
-    const tot=["TOTAL",fmt(sc(tk,"investors_contacted")),fmt(sc(tk,"total"))].concat(cols.map(c=>fmt(tk.reduce((a,r)=>a+(r[c]||0),0))));
-    tbl("t-tasks",h,rows,tot);
+    // Extra columns pulled from other sources — injected at the end
+    const ovMap2={};(D.overview||[]).forEach(r=>ovMap2[r.name]=r);
+    const kdMap2={};(D.kpi_dashboard||[]).forEach(r=>kdMap2[r.name]=r);
+    const uniqOf=name=>(ovMap2[name]||{}).unique_meetings||0;
+    const qcOf=name=>(kdMap2[name]||{}).qualified_calls||0;
+    const h=[["Name",""],["Total Tasks","nb"]]
+      .concat(cols.map(c=>[c,"n"]))
+      .concat([["Qualified Calls","n"],["Unique Meetings","n"]]);
+    const rows=tk.map(r=>[r.name,fmt(r.total)]
+      .concat(cols.map(c=>fmt(r[c]||0)))
+      .concat([fmt(qcOf(r.name)),fmt(uniqOf(r.name))]));
+    const tLen=tk.length||1;
+    const qcColIdx   = 1 + 1 + cols.length;       // Qualified Calls position
+    const uniqColIdx = qcColIdx + 1;              // Unique Meetings position
+    // Conditional-formatting series for Total + each task-type column + the two extras
+    const tkCfSeries={1:tk.map(r=>r.total||0)};
+    cols.forEach((c,ci)=>{tkCfSeries[ci+2]=tk.map(r=>r[c]||0);});
+    tkCfSeries[qcColIdx]   = tk.map(r=>qcOf(r.name));
+    tkCfSeries[uniqColIdx] = tk.map(r=>uniqOf(r.name));
+    const thead2="<thead><tr>"+h.map(x=>`<th class="${x[1]||''}">${x[0]}</th>`).join("")+"</tr></thead>";
+    const tbody2="<tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>{
+      let cls=h[i][1]||'';
+      if(tkCfSeries[i]){const n=parseFloat(String(c).replace(/,/g,''))||0;const band=cfClass(n,tkCfSeries[i],1);if(band)cls+=(cls?' ':'')+band;}
+      return `<td class="${cls}">${c}</td>`;
+    }).join("")+"</tr>").join("")+"</tbody>";
+    const uniqSum=tk.reduce((a,r)=>a+uniqOf(r.name),0);
+    const qcSum  =tk.reduce((a,r)=>a+qcOf(r.name),0);
+    const tfoot2=`<tfoot>
+      <tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)"><td>TOTAL</td><td class="nb">${fmt(sc(tk,"total"))}</td>${cols.map(c=>`<td class="nb">${fmt(tk.reduce((a,r)=>a+(r[c]||0),0))}</td>`).join("")}<td class="nb">${fmt(qcSum)}</td><td class="nb">${fmt(uniqSum)}</td></tr>
+      <tr style="font-weight:600;color:#fbbf24;font-size:11px"><td>TEAM AVG</td><td class="n">${Math.round(sc(tk,"total")/tLen*10)/10}</td>${cols.map(c=>`<td class="n">${Math.round(tk.reduce((a,r)=>a+(r[c]||0),0)/tLen*10)/10}</td>`).join("")}<td class="n">${Math.round(qcSum/tLen*10)/10}</td><td class="n">${Math.round(uniqSum/tLen*10)/10}</td></tr>
+    </tfoot>`;
+    document.getElementById("t-tasks").innerHTML=thead2+tbody2+tfoot2;
   }
 
   // Pre-sales
@@ -1456,7 +1912,7 @@ function render(D){
     const h=[["Name",""]].concat(cols.map(c=>[c,"n"]));
     const rows=ps.map(r=>[r.name].concat(cols.map(c=>fmt(r[c]||0))));
     const tot=["TOTAL"].concat(cols.map(c=>fmt(ps.reduce((a,r)=>a+(r[c]||0),0))));
-    tbl("t-presales",h,rows,tot);
+    tbl("t-presales",h,rows,tot,cols.map((_,i)=>i+1));
   }
 
   // Funnel
@@ -1465,14 +1921,14 @@ function render(D){
     const h=[["Name",""],["Inquiry","n"],["Prospect","n"],["Mature","n"],["Pre-closure","n"],["Sold","n"],["Closed Lost","n"],["Mature Rev","n"],["Pre-clo Rev","n"],["Sold Rev","n"]];
     const rows=fn.map(r=>[r.user_name,fmt(r.inquiries),fmt(r.prospects),fmt(r.mature),fmt(r.preclosure),fmt(r.sold),fmt(r.closedlost),fmtR(r.mature_rev),fmtR(r.preclosure_rev),fmtR(r.sold_rev)]);
     const t=fn.reduce((a,r)=>({i:a.i+r.inquiries,p:a.p+r.prospects,m:a.m+r.mature,pc:a.pc+r.preclosure,s:a.s+r.sold,cl:a.cl+r.closedlost,mr:a.mr+r.mature_rev,pr:a.pr+r.preclosure_rev,sr:a.sr+r.sold_rev}),{i:0,p:0,m:0,pc:0,s:0,cl:0,mr:0,pr:0,sr:0});
-    tbl("t-funnel",h,rows,["TOTAL",fmt(t.i),fmt(t.p),fmt(t.m),fmt(t.pc),fmt(t.s),fmt(t.cl),fmtR(t.mr),fmtR(t.pr),fmtR(t.sr)]);
+    tbl("t-funnel",h,rows,["TOTAL",fmt(t.i),fmt(t.p),fmt(t.m),fmt(t.pc),fmt(t.s),fmt(t.cl),fmtR(t.mr),fmtR(t.pr),fmtR(t.sr)],[1,2,3,4,5,6,7,8,9]);
   }
 
   // Login charts
   {
     const hex=(x,y,h)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return{x,y,type:"scatter",mode:"lines+markers",line:{color:h,width:2},marker:{size:4,color:h},fill:"tozeroy",fillcolor:`rgba(${r},${g},${b},0.1)`}};
-    Plotly.newPlot("ch-login-trend",[hex(D.logins_trend.x,D.logins_trend.y,C[2])],{...PL,title:{text:"Daily Login Sessions",font:{size:13,color:"#f1f5f9"},x:0.01}},CFG);
-    Plotly.newPlot("ch-login-bar",[{x:D.logins_bar.x,y:D.logins_bar.y,type:"bar",marker:{color:C[3]}}],{...PL,xaxis:{...PL.xaxis,type:"category"},title:{text:"Logins per Wealth Manager",font:{size:13,color:"#f1f5f9"},x:0.01}},CFG);
+    Plotly.newPlot("ch-login-trend",[hex(D.logins_trend.x,D.logins_trend.y,C[2])],{...PL,title:{text:"Daily Login Sessions",font:{size:13,color:"var(--text-heading)"},x:0.01,y:0.98,yanchor:'top'},margin:{t:55,r:16,b:56,l:50}},CFG);
+    Plotly.newPlot("ch-login-bar",[{x:D.logins_bar.x,y:D.logins_bar.y,type:"bar",marker:{color:C[3]}}],{...PL,xaxis:{...PL.xaxis,type:"category"},title:{text:"Logins per Wealth Manager",font:{size:13,color:"var(--text-heading)"},x:0.01,y:0.98,yanchor:'top'},margin:{t:55,r:16,b:56,l:50}},CFG);
   }
 
   // ═══ ANALYTICS CHARTS ═══
@@ -1656,7 +2112,7 @@ function filterNotes(){
         <div><div class="note-name">${n.user_name}</div></div>
         <div class="note-date">${n.date}</div></div>
       <div class="note-title">${esc(n.title)}</div>
-      ${n.ai_summary?`<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;line-height:1.5"><span style="color:#818cf8;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px">AI Summary</span><br><span style="color:#e2e8f0">${esc(n.ai_summary)}</span></div>`:''}
+      ${n.ai_summary?`<div style="background:rgba(13,122,63,.08);border:1px solid rgba(13,122,63,.2);border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;line-height:1.5"><span style="color:var(--bayut-green);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px">AI Summary</span><br><span style="color:var(--text)">${esc(n.ai_summary)}</span></div>`:''}
       <div class="note-body" id="note-body-${i}">${esc(n.notes)}</div>
       ${n.notes.length>200?`<div class="note-toggle" onclick="toggleNote(${i})">Show more</div>`:''}
     </div>`;
@@ -1811,7 +2267,7 @@ function renderInsights(D){
     labels:stageNames, values:stageVals, type:'pie', hole:0.5,
     marker:{colors:stageCols.slice(0,stageNames.length)},
     textinfo:'label+value+percent', textfont:{color:'#e2e8f0',size:11}
-  }],{...PL,showlegend:true,title:{text:'Pipeline by Stage',font:{size:13,color:'#f1f5f9'},x:0.01},margin:{t:35,r:16,b:16,l:16}},CFG);
+  }],{...PL,showlegend:true,title:{text:'Deal Pipeline by Stage',font:{size:13,color:'#f1f5f9'},x:0.01},margin:{t:35,r:16,b:16,l:16}},CFG);
 
   // 2. Deal Velocity (horizontal bar — avg days per stage)
   const velStages=Object.keys(sv);
@@ -1868,6 +2324,21 @@ function renderInsights(D){
 }
 
 // Initial load — set to monthly by default
+// Flask context injection (only works on localhost, ignored on static)
+try{
+  var _userName = "{{ user_name|default('',true) }}";
+  var _userRole = "{{ user_role|default('',true) }}";
+  var _userWmId = "{{ user_wm_id|default('',true) }}";
+  if(_userName){
+    document.getElementById('user-badge-el').style.display='flex';
+    document.getElementById('user-avatar-el').textContent=_userName.substring(0,2).toUpperCase();
+    document.getElementById('user-name-el').textContent=_userName;
+  }
+  if(_userWmId){
+    document.getElementById('sidebar').style.display='none';
+  }
+}catch(e){}
+
 setPreset('weekly');
 
 // Auto-refresh every 5 minutes (silently, no loading spinner)
@@ -1883,6 +2354,557 @@ setInterval(()=>{
   }).catch(()=>{});
 }, 300000); // 5 minutes
 
+// ══════════════════════════════════════════════════════════════════════════
+// WM Meeting Notes tab — 10-criteria Sentiment / Note Analysis
+// Loaded from meeting_notes_analysis.json (regenerated on demand via Claude Code)
+// ══════════════════════════════════════════════════════════════════════════
+(function(){
+  function bandColor(score){
+    if(score==null||isNaN(score)) return {fg:'var(--muted)', bg:'var(--surface2)', label:'—'};
+    if(score<3)  return {fg:'#dc2626', bg:'rgba(220,38,38,.12)',  label:'Red'};
+    if(score<5)  return {fg:'#ea580c', bg:'rgba(234,88,12,.14)',  label:'Orange'};
+    if(score<7)  return {fg:'#ca8a04', bg:'rgba(202,138,4,.16)',  label:'Yellow'};
+    if(score<9)  return {fg:'#16a34a', bg:'rgba(22,163,74,.14)',  label:'Light Green'};
+    return             {fg:'#15803d', bg:'rgba(21,128,61,.16)',  label:'Dark Green'};
+  }
+  function renderMNA(D){
+    const el = document.getElementById('mna-container');
+    if(!el) return;
+    if(!D || !D.wms){
+      el.innerHTML = `<div class="card" style="padding:20px;color:var(--muted);font-size:.78rem">Analysis not yet generated. Ask Claude Code to run the meeting-note analysis.</div>`;
+      return;
+    }
+    // Window + generated-at banner
+    const w = D.window || {};
+    const win = document.getElementById('mna-window');
+    if(win){ win.textContent = `Window ${w.start} → ${w.end} · Generated ${String(D.generated_at||'').replace('T',' ')}`; }
+
+    const labels = D.criteria_labels || {};
+    const catMap = D.categories || {};
+    // Team roll-up banner
+    const tr = D.team_roll_up || {};
+    const rollup = `<div class="card" style="padding:12px 14px;margin-bottom:14px;border-left:4px solid var(--bayut-green);background:linear-gradient(135deg,#ffffff,var(--g6))">
+      <div style="font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--bayut-green);margin-bottom:4px">Team Roll-up</div>
+      <div style="font-size:.82rem;color:var(--text);line-height:1.45">${tr.headline||''}</div>
+      ${tr.process_issues&&tr.process_issues.length?`<ul style="margin-top:6px;padding-left:18px;font-size:.72rem;color:var(--muted);line-height:1.5">${tr.process_issues.map(x=>'<li>'+x+'</li>').join('')}</ul>`:''}
+      ${tr.top_performer_by_composite?`<div style="font-size:.72rem;color:var(--text);margin-top:6px"><b>Top performer:</b> ${tr.top_performer_by_composite} · <b>Needs attention:</b> ${tr.bottom_performer_with_notes_by_composite||'—'}</div>`:''}
+    </div>`;
+
+    // Per-WM cards
+    const cards = (D.wms||[]).map(wm => {
+      const c = wm.category_scores || {};
+      const sc = wm.scores || {};
+      const composite = c.Composite;
+      const compBand = bandColor(composite);
+      const catRow = ['Lead Quality','Effort Quality','Pipeline Integrity'].map(k=>{
+        const v = c[k]; const b = bandColor(v);
+        return `<div style="flex:1;min-width:0;background:${b.bg};border-radius:8px;padding:8px 10px;border-left:3px solid ${b.fg}">
+          <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700">${k}</div>
+          <div style="font-size:1.05rem;font-weight:700;color:${b.fg};margin-top:2px">${v==null?'—':v.toFixed(1)}</div>
+        </div>`;
+      }).join('');
+      // 10-criterion breakdown grid
+      const critGrid = Object.keys(labels).sort((a,b)=>+a-+b).map(k=>{
+        const cr = sc[k]||{}; const b = bandColor(cr.score);
+        // Figure out which category this criterion belongs to
+        let catName='';
+        for(const cn of Object.keys(catMap)){ if((catMap[cn]||[]).includes(+k)){ catName=cn; break; } }
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${b.fg};border-radius:8px;padding:10px 12px;cursor:default">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div style="font-size:.6rem;color:var(--muted);font-weight:700">#${k}</div>
+            <div style="font-size:.74rem;font-weight:700;color:var(--bayut-dark);flex:1;line-height:1.3">${labels[k]||''}</div>
+            <div style="background:${b.bg};color:${b.fg};padding:2px 10px;border-radius:10px;font-size:.72rem;font-weight:700">${cr.score==null?'N/A':cr.score}</div>
+          </div>
+          <div style="font-size:.64rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.3px">${catName}</div>
+          <div style="font-size:.72rem;color:var(--text);margin-top:6px;line-height:1.5">${(cr.reasoning||'').replace(/</g,'&lt;')}</div>
+        </div>`;
+      }).join('');
+      // Flagged contacts
+      const fc = (wm.flagged_contacts||[]);
+      const flagged = fc.length ? `<div style="margin-top:14px"><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#dc2626;margin-bottom:6px">Flagged for HOD attention</div>
+        <div style="display:grid;gap:6px">${fc.map(x=>`<div style="background:rgba(220,38,38,.06);border-left:3px solid #dc2626;border-radius:6px;padding:8px 10px;font-size:.72rem;color:var(--text);line-height:1.45"><b style="color:#dc2626">${x.contact}</b>: ${x.reason}</div>`).join('')}</div></div>` : '';
+      // CRM divergence
+      const cd = (wm.crm_divergence||[]);
+      const divergence = cd.length ? `<div style="margin-top:12px"><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#ea580c;margin-bottom:6px">CRM vs Reality Divergence</div>
+        <div style="display:grid;gap:6px">${cd.map(x=>`<div style="background:rgba(234,88,12,.06);border-left:3px solid #ea580c;border-radius:6px;padding:8px 10px;font-size:.72rem;color:var(--text);line-height:1.45">${x.note}</div>`).join('')}</div></div>` : '';
+
+      // If has_notes is false, show an inline notice at the top
+      const noNotesBanner = (!wm.has_notes) ? `<div style="background:rgba(234,88,12,.1);border:1px dashed #ea580c;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.72rem;color:#ea580c"><b>No HOD meeting notes logged in window.</b> Criteria 1–7 marked N/A. Only CRM-based criteria (8, 9, 10) scored.</div>` : '';
+
+      const initials = wm.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+
+      return `<div class="card" style="padding:16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--bayut-green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem">${initials}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:1rem;color:var(--bayut-dark)">${wm.name}</div>
+            <div style="font-size:.66rem;color:var(--muted)">${wm.notes_count} note${wm.notes_count===1?'':'s'} · ${wm.tasks_count} tasks · ${wm.crm_inquiries} CRM inquiries</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700">Composite</div>
+            <div style="background:${compBand.bg};color:${compBand.fg};padding:4px 12px;border-radius:16px;font-size:1rem;font-weight:700;display:inline-block;margin-top:2px">${composite==null?'N/A':composite.toFixed(1)} / 10</div>
+          </div>
+        </div>
+        ${noNotesBanner}
+        <div style="display:flex;gap:8px;margin-bottom:12px">${catRow}</div>
+        <details><summary style="cursor:pointer;font-size:.72rem;color:var(--bayut-green);font-weight:700;margin-bottom:8px">Show per-criterion detail</summary>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:8px;margin-top:8px">${critGrid}</div>
+        </details>
+        ${flagged}
+        ${divergence}
+      </div>`;
+    }).join('');
+
+    el.innerHTML = rollup + cards;
+  }
+
+  function loadMNA(){
+    fetch('/meeting_notes_analysis.json', {cache:'no-cache'})
+      .then(r => r.ok ? r.json() : null)
+      .then(d => renderMNA(d))
+      .catch(() => renderMNA(null));
+  }
+  document.addEventListener('DOMContentLoaded', loadMNA);
+  if(document.readyState !== 'loading') loadMNA();
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// WM PIPELINE tab — static Excel-driven view
+// ══════════════════════════════════════════════════════════════════════════
+(function(){
+  const SAR = v => {
+    if(v==null||isNaN(v)) return '—';
+    if(v>=1e9) return 'SAR '+(v/1e9).toFixed(2)+'B';
+    if(v>=1e6) return 'SAR '+(v/1e6).toFixed(1)+'M';
+    if(v>=1e3) return 'SAR '+(v/1e3).toFixed(0)+'K';
+    return 'SAR '+Math.round(v).toLocaleString();
+  };
+  const INT = v => (v==null||isNaN(v)) ? '0' : Math.round(v).toLocaleString();
+
+  // Stage → color map (parent stages)
+  const STAGE_COLORS = {
+    'Prospect': '#d97706',          // orange
+    'Mature': '#1d6cb0',            // blue
+    'Pre-Closure': '#6d28d9',       // purple
+    'Execution': '#0d7a3f',         // bayut-green
+    'Partially Closed': '#10935a',  // g2
+    'Full Closure': '#059669',      // site office green
+    'Deal Paused': '#506b5a',       // muted
+    'Deal Lost': '#dc2626',         // red
+  };
+  // Given a sub-stage like "6. Investor Deal DD", return its parent stage name
+  function subStageToParent(ss, taxonomy){
+    if(!ss) return null;
+    const s = ss.trim();
+    for(const st of taxonomy.stages){
+      if(st.sub_stages && st.sub_stages.some(x=>x.trim().toLowerCase()===s.toLowerCase())) return st.name;
+    }
+    // Fallback heuristic by number
+    const m = s.match(/^(\d+)\./); if(m){ const n=parseInt(m[1]);
+      if(n<=4) return 'Prospect'; if(n<=8) return 'Mature';
+      if(n===9) return 'Pre-Closure'; if(n===10) return 'Execution';
+      if(n===11) return 'Partially Closed'; if(n===12) return 'Full Closure';
+    }
+    return null;
+  }
+  function colorFor(parentStage){ return STAGE_COLORS[parentStage] || '#506b5a'; }
+
+  // Extract a leverage % (e.g. "60%", "50-60%") from free-text comments if present
+  function extractLeveragePct(d){
+    if((d.leverage||'').toLowerCase()!=='yes') return '';
+    const text = ((d.comments||'')+' '+(d.next_steps||'')).toLowerCase();
+    const m = text.match(/(\d{1,2}(?:\.\d+)?)\s*[-–]\s*(\d{1,2}(?:\.\d+)?)\s*%/); // "60-70%"
+    if(m) return ` · ${m[1]}–${m[2]}%`;
+    const s = text.match(/(\d{1,2}(?:\.\d+)?)\s*%/);
+    if(s) return ` · ${s[1]}%`;
+    return '';
+  }
+
+  // ── DEAL FUNNEL — 3-level drill-down ─────────────────────────────────
+  // Normalise stage labels so "1. Prospect" and "Prospect" compare equal
+  function _stripNum(s){ return (s||'').replace(/^\s*\d+\.\s*/,'').trim().toLowerCase(); }
+  function dealsAt(stageName, subName){
+    const all = window._wmpDealsAll || [];
+    const s = _stripNum(stageName);
+    const u = _stripNum(subName);
+    return all.filter(d => {
+      if(stageName && _stripNum(d.stage) !== s) return false;
+      if(subName   && subName !== '__all__' && _stripNum(d.status) !== u) return false;
+      return true;
+    });
+  }
+  function _box(opts){
+    const {label, count, value, sub, active, dimmed, onclick, color, cursor='pointer'} = opts;
+    const bg = active ? `linear-gradient(135deg,${color},${color}dd)` : `linear-gradient(135deg,#ffffff,${color}1a)`;
+    const tx = active ? '#fff' : 'var(--text)';
+    const mut= active ? 'rgba(255,255,255,.85)' : 'var(--muted)';
+    const shadow = active ? `0 2px 10px ${color}55` : '0 1px 3px rgba(0,0,0,.06)';
+    const border = active ? color : 'var(--border)';
+    const opacity = dimmed ? 0.38 : 1;
+    return `<div onclick="${onclick}" style="cursor:${cursor};border:1px solid ${border};border-left:4px solid ${color};border-radius:14px;padding:12px 12px;background:${bg};box-shadow:${shadow};transition:all .15s;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;opacity:${opacity};min-width:0">
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.35px;color:${tx};line-height:1.25;overflow:hidden;text-overflow:ellipsis">${label}</div>
+      ${sub?`<div style="font-size:.64rem;color:${mut};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sub}</div>`:''}
+      <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">
+        <div style="font-size:1.15rem;font-weight:700;color:${tx}">${count}</div>
+        <div style="font-size:.66rem;color:${mut}">deals</div>
+        <div style="margin-left:auto;font-size:.7rem;font-weight:700;color:${tx}">${value>0?SAR(value):'—'}</div>
+      </div>
+    </div>`;
+  }
+
+  window.renderFunnelL1 = function(){
+    const tax = window._wmpTax || {stages:[]};
+    const selectedStage = window._wmpFunnelSelected.stage;
+    const stages = tax.stages.filter(st => st.order <= 10 || dealsAt(st.name).length>0);
+    const cards = stages.map(st => {
+      const rows = dealsAt(st.name);
+      const totalCount = rows.length;
+      const totalValue = rows.reduce((a,d)=>a+(d.value||0),0);
+      const c = colorFor(st.name);
+      const active = selectedStage === st.name;
+      const dimmed = selectedStage && !active;
+      const bg = active ? `linear-gradient(135deg,${c},${c}dd)` : `linear-gradient(135deg,#ffffff,${c}1a)`;
+      const tx = active ? '#fff' : 'var(--text)';
+      const mut= active ? 'rgba(255,255,255,.85)' : 'var(--muted)';
+      const shadow = active ? `0 4px 14px ${c}55` : '0 1px 4px rgba(0,0,0,.06)';
+      const border = active ? c : 'var(--border)';
+      const opacity = dimmed ? 0.38 : 1;
+      // Sub-stage breakdown rows inside the stage card
+      const subs = (st.sub_stages||[]);
+      const subRows = subs.length ? subs.map(sub=>{
+        const sr = dealsAt(st.name, sub);
+        const label = sub.replace(/^\s*\d+\.\s*/, ''); // strip "6. " prefix for brevity
+        const valStr = sr.length ? SAR(sr.reduce((a,d)=>a+(d.value||0),0)) : '—';
+        const line = active
+          ? `color:rgba(255,255,255,.9);border-top:1px solid rgba(255,255,255,.15)`
+          : `color:var(--text);border-top:1px solid var(--border)`;
+        return `<div style="display:flex;align-items:center;gap:6px;font-size:.66rem;padding:4px 0;${line}">
+          <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>
+          <div style="font-weight:700;min-width:20px;text-align:right">${sr.length}</div>
+          <div style="${active?'color:rgba(255,255,255,.75)':'color:var(--muted)'};min-width:60px;text-align:right;font-size:.64rem">${valStr}</div>
+        </div>`;
+      }).join('') : `<div style="font-size:.66rem;color:${mut};padding:4px 0;font-style:italic">No sub-stages configured</div>`;
+      return `<div onclick="window.selectFunnelStage('${st.name.replace(/'/g,"\\'")}')" style="cursor:pointer;border:1px solid ${border};border-left:4px solid ${c};border-radius:14px;padding:12px 12px 10px;background:${bg};box-shadow:${shadow};transition:all .15s;min-height:210px;display:flex;flex-direction:column;opacity:${opacity};min-width:0">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${tx};line-height:1.2">${st.name}</div>
+        <div style="font-size:.62rem;color:${mut};margin-top:2px">${subs.length} sub-stage${subs.length===1?'':'s'}</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin:8px 0 6px">
+          <div style="font-size:1.3rem;font-weight:700;color:${tx};line-height:1">${totalCount}</div>
+          <div style="font-size:.64rem;color:${mut}">deals</div>
+          <div style="margin-left:auto;font-size:.72rem;font-weight:700;color:${tx}">${totalValue>0?SAR(totalValue):'—'}</div>
+        </div>
+        <div style="margin-top:auto">${subRows}</div>
+      </div>`;
+    }).join('');
+    const n = stages.length;
+    document.getElementById('wmp-funnel-l1').innerHTML =
+      `<div style="display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));gap:8px">${cards}</div>`;
+  };
+
+  window.selectFunnelStage = function(stage){
+    if(window._wmpFunnelSelected.stage === stage){
+      // Clicking again deselects and collapses level 2/3
+      window._wmpFunnelSelected = {stage:null, sub:null, wm:null};
+    } else {
+      window._wmpFunnelSelected = {stage, sub:null, wm:null};
+    }
+    renderFunnelL1();
+    renderFunnelL2();
+    renderFunnelL3();
+  };
+
+  window.renderFunnelL2 = function(){
+    const stage = window._wmpFunnelSelected.stage;
+    const el = document.getElementById('wmp-funnel-l2');
+    if(!stage){ el.innerHTML=''; return; }
+    const tax = window._wmpTax || {stages:[]};
+    const stObj = (tax.stages||[]).find(s => s.name===stage) || {sub_stages:[]};
+    const subs = stObj.sub_stages || [];
+    const c = colorFor(stage);
+    if(!subs.length){
+      // No sub-stages → go straight to WM breakdown using the stage only
+      el.innerHTML = `<div style="font-size:.7rem;color:var(--muted);margin-bottom:6px">No sub-stages for <b>${stage}</b> — jumping straight to WM breakdown</div>`;
+      window._wmpFunnelSelected.sub = '__all__';
+      return;
+    }
+    const selectedSub = window._wmpFunnelSelected.sub;
+    const cards = subs.map(sub => {
+      const rows = dealsAt(stage, sub);
+      const wmSet = new Set(rows.map(d=>d.wm).filter(Boolean));
+      const active = selectedSub === sub;
+      const dimmed = selectedSub && !active;
+      return _box({
+        label: sub,
+        sub: wmSet.size ? Array.from(wmSet).map(w=>w.split(' ')[0]).join(', ') : '—',
+        count: rows.length,
+        value: rows.reduce((a,d)=>a+(d.value||0),0),
+        active, dimmed, color: c,
+        onclick: `window.selectFunnelSub('${sub.replace(/'/g,"\\'")}')`,
+      });
+    }).join('');
+    el.innerHTML =
+      `<div style="font-size:.64rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Sub-stages of <b style="color:${c}">${stage}</b></div>
+       <div style="display:grid;grid-template-columns:repeat(${subs.length},minmax(0,1fr));gap:8px">${cards}</div>`;
+  };
+
+  window.selectFunnelSub = function(sub){
+    if(window._wmpFunnelSelected.sub === sub){
+      window._wmpFunnelSelected.sub = null;
+    } else {
+      window._wmpFunnelSelected.sub = sub;
+    }
+    window._wmpFunnelSelected.wm = null;  // reset WM focus when sub changes
+    renderFunnelL2();
+    renderFunnelL3();
+  };
+
+  window.selectFunnelWM = function(wm){
+    window._wmpFunnelSelected.wm = (window._wmpFunnelSelected.wm === wm) ? null : wm;
+    renderFunnelL3();
+  };
+
+  window.renderFunnelL3 = function(){
+    const stage = window._wmpFunnelSelected.stage;
+    const sub   = window._wmpFunnelSelected.sub;
+    const el = document.getElementById('wmp-funnel-l3');
+    if(!stage || !sub){ el.innerHTML=''; window._wmpFunnelSelected.wm=null; return; }
+    const rows = sub === '__all__' ? dealsAt(stage, null) : dealsAt(stage, sub);
+    if(!rows.length){ el.innerHTML = `<div style="padding:12px;color:var(--muted);font-size:.72rem">No deals at this sub-stage.</div>`; return; }
+    const c = colorFor(stage);
+    const selectedWM = window._wmpFunnelSelected.wm;
+    // Group deals by WM
+    const byWM = {};
+    rows.forEach(d => { const k=d.wm||'Unassigned'; if(!byWM[k]) byWM[k]=[]; byWM[k].push(d); });
+    const wmOrder = Object.keys(byWM).sort((a,b)=>byWM[b].reduce((x,y)=>x+(y.value||0),0)-byWM[a].reduce((x,y)=>x+(y.value||0),0));
+    const cards = wmOrder.map(wm => {
+      const wmDeals = byWM[wm];
+      const wmTotal = wmDeals.reduce((a,d)=>a+(d.value||0),0);
+      const wmMinDev = wmDeals.reduce((a,d)=>a+(d.min_dev_revenue||0),0);
+      const initials = wm.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+      const active = selectedWM === wm;
+      const dimmed = selectedWM && !active;
+      const opacity = dimmed ? 0.38 : 1;
+      const borderCol = active ? c : 'var(--border)';
+      const ring = active ? `box-shadow:0 4px 14px ${c}55;` : '';
+      const dealBlocks = wmDeals.map(d => {
+        const lev = (d.leverage||'').toLowerCase()==='yes' ? `<b>Yes</b>${extractLeveragePct(d)}`
+                  : (d.leverage||'—');
+        return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface);margin-top:8px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <div style="font-weight:700;color:var(--bayut-dark);font-size:.82rem">${d.investor||'—'}</div>
+            <div style="font-weight:700;color:var(--text-heading);font-size:.82rem">${d.value?SAR(d.value):'Value TBC'}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;margin-top:6px;font-size:.7rem;color:var(--text)">
+            <div><span style="color:var(--muted)">Investor Type:</span> ${d.investor_type||'—'}</div>
+            <div><span style="color:var(--muted)">Strategy:</span> ${d.strategy||'—'}</div>
+            <div><span style="color:var(--muted)">Location:</span> ${d.deal_location||'—'}</div>
+            <div><span style="color:var(--muted)">Project:</span> ${d.deal||'—'}</div>
+            <div><span style="color:var(--muted)">Leverage:</span> ${lev}</div>
+            <div><span style="color:var(--muted)">Min Dev Rev:</span> ${d.min_dev_revenue?SAR(d.min_dev_revenue):'—'}</div>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="card" onclick="window.selectFunnelWM('${wm.replace(/'/g,"\\'")}')" style="padding:12px;border:1px solid ${borderCol};border-left:4px solid ${c};cursor:pointer;opacity:${opacity};transition:opacity .15s;${ring}min-width:0;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;flex-shrink:0">${initials}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.84rem;color:var(--bayut-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${wm}</div>
+            <div style="font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${wmDeals.length} deal${wmDeals.length===1?'':'s'} · ${SAR(wmTotal)}${wmMinDev?` · Min Dev ${SAR(wmMinDev)}`:''}</div>
+          </div>
+        </div>
+        ${dealBlocks}
+      </div>`;
+    }).join('');
+    const header = sub==='__all__' ? `All deals in <b style="color:${c}">${stage}</b>` : `Deals at <b style="color:${c}">${stage} → ${sub}</b>`;
+    // Force N columns so WMs sit in one row (up to 6 — past that, wrap)
+    const nWM = wmOrder.length;
+    const cols = nWM <= 6 ? `repeat(${nWM},minmax(0,1fr))` : `repeat(auto-fit,minmax(240px,1fr))`;
+    el.innerHTML =
+      `<div style="font-size:.64rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">${header}</div>
+       <div style="display:grid;grid-template-columns:${cols};gap:10px">${cards}</div>`;
+  };
+
+  function renderWMPipeline(){
+    const D = window.WM_PIPELINE_DATA;
+    if(!D){
+      document.getElementById('wmp-hero').innerHTML =
+        '<div class="card" style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted)">Pipeline data not loaded. Run <code>python import_pipeline_xlsx.py</code>.</div>';
+      return;
+    }
+    const deals = D.deals || [];
+    const tax   = D.taxonomy || {stages:[]};
+
+    // Source banner
+    document.getElementById('wmp-source').textContent =
+      `Source: ${D.source_file || 'wm_pipeline.xlsx'} · Generated: ${(D.generated_at||'').replace('T',' ')} · ${deals.length} deals`;
+
+    // ── HERO TILES ──────────────────────────────────────────────────────
+    const totalDeals = deals.length;
+    const withValue  = deals.filter(d=>d.value).length;
+    const valueTotal = deals.reduce((a,d)=>a+(d.value||0),0);
+    const uniqueInv  = new Set(deals.map(d=>(d.investor||'').toLowerCase()).filter(Boolean)).size;
+    const avgValue   = withValue ? valueTotal/withValue : 0;
+    const minDevRev  = deals.reduce((a,d)=>a+(d.min_dev_revenue||0),0);
+    const withLev    = deals.filter(d=>{const l=(d.leverage||'').toLowerCase();return l==='yes';}).length;
+    const tiles = [
+      ['Total Deals', INT(totalDeals), 'var(--bayut-green)'],
+      ['Pipeline Value', SAR(valueTotal), 'var(--orange)'],
+      ['Unique Investors', INT(uniqueInv), 'var(--blue)'],
+      ['Avg Deal Value', SAR(avgValue), 'var(--g2)'],
+      ['Min Developer Revenue', SAR(minDevRev), 'var(--purple)'],
+      ['Deals with Leverage', INT(withLev), 'var(--pink)'],
+    ];
+    document.getElementById('wmp-hero').innerHTML = tiles.map((t,i)=>
+      `<div class="summary-card"><div class="sc-label" style="color:var(--muted)">${t[0]}</div>
+       <div class="sc-top" style="align-items:baseline"><div class="sc-value" style="color:var(--text-heading);font-size:22px">${t[1]}</div></div>
+       </div>`).join('');
+    // Re-apply the per-position accent bar colors (light theme override expects specific n-th children)
+    const heroCards = document.querySelectorAll('#wmp-hero .summary-card');
+    heroCards.forEach((el,i)=>{ el.style.setProperty('--_accent', tiles[i][2]);
+      el.style.borderTop = `3px solid ${tiles[i][2]}`; });
+
+    // ── DEAL FUNNEL — 3-level drill-down (Stage → Sub-stage → WM) ──────
+    window._wmpFunnelSelected = {stage: null, sub: null};
+    window._wmpDealsAll = deals;
+    window._wmpTax = tax;
+    renderFunnelL1();
+
+    // ── WM LEADERBOARD ──────────────────────────────────────────────────
+    const wms = {};
+    deals.forEach(d => {
+      const k = d.wm || 'Unassigned';
+      if(!wms[k]) wms[k] = {name:k, count:0, value:0, min_dev:0, days_sum:0, days_n:0};
+      wms[k].count += 1;
+      wms[k].value += (d.value||0);
+      wms[k].min_dev += (d.min_dev_revenue||0);
+      if(d.days_since!=null){ wms[k].days_sum += d.days_since; wms[k].days_n += 1; }
+    });
+    const wmRows = Object.values(wms).sort((a,b)=>b.value-a.value);
+    const teamValue = wmRows.reduce((a,r)=>a+r.value,0) || 1;
+    const seriesCount = wmRows.map(r=>r.count);
+    const seriesValue = wmRows.map(r=>r.value);
+    const seriesAvg   = wmRows.map(r=>r.count?r.value/r.count:0);
+    const seriesDays  = wmRows.map(r=>r.days_n?r.days_sum/r.days_n:0);
+    const wmTable = `
+      <thead><tr><th>Wealth Manager</th><th class="n">Deals</th><th class="n">Pipeline Value</th>
+        <th class="n">Avg Deal</th><th class="n">% Rev Contribution</th></tr></thead>
+      <tbody>${wmRows.map(r=>{
+        const avg = r.count ? r.value/r.count : 0;
+        const pct = Math.round(r.value/teamValue*100);
+        return `<tr>
+          <td>${r.name}</td>
+          <td class="nb ${cfClass(r.count,seriesCount,1)}">${INT(r.count)}</td>
+          <td class="nb ${cfClass(r.value,seriesValue,1)}">${SAR(r.value)}</td>
+          <td class="n ${cfClass(avg,seriesAvg,1)}">${SAR(avg)}</td>
+          <td class="n">${pct}%</td>
+        </tr>`;
+      }).join('')}</tbody>
+      <tfoot><tr style="border-top:2px solid var(--border);font-weight:700;color:var(--text-heading)">
+        <td>TOTAL</td>
+        <td class="nb">${INT(wmRows.reduce((a,r)=>a+r.count,0))}</td>
+        <td class="nb">${SAR(teamValue)}</td>
+        <td class="n">—</td>
+        <td class="n">100%</td>
+      </tr></tfoot>`;
+    document.getElementById('wmp-wm-table').innerHTML = wmTable;
+
+    // ── BREAKDOWNS: helper ──────────────────────────────────────────────
+    // (renderFunnelL1/L2/L3 defined outside this function as window fns so
+    // onclick handlers can call them. Defined below.)
+
+    function renderBreakdown(elId, keyFn, colorPalette){
+      const groups = {};
+      deals.forEach(d => { const k = keyFn(d) || 'Other'; if(!groups[k]) groups[k]={count:0,value:0}; groups[k].count+=1; groups[k].value+=(d.value||0); });
+      const arr = Object.entries(groups).map(([k,v])=>({k,...v})).sort((a,b)=>b.value-a.value);
+      const totalC = arr.reduce((a,r)=>a+r.count,0) || 1;
+      const totalV = arr.reduce((a,r)=>a+r.value,0) || 1;
+      document.getElementById(elId).innerHTML = arr.map((r,i)=>{
+        const c = colorPalette[i%colorPalette.length];
+        const pctC = Math.round(r.count/totalC*100);
+        const pctV = Math.round(r.value/totalV*100);
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="flex:0 0 130px;font-size:.74rem;color:var(--text);font-weight:600;line-height:1.3">${r.k}</div>
+          <div style="flex:1;background:var(--surface2);border-radius:5px;height:24px;overflow:hidden"><div style="width:${pctC}%;height:100%;background:${c};display:flex;align-items:center;justify-content:flex-end;padding:0 8px;color:#fff;font-weight:700;font-size:.66rem">${pctC>10?pctC+'%':''}</div></div>
+          <div style="flex:0 0 48px;text-align:right;font-size:.78rem;font-weight:700;color:var(--text-heading)">${r.count}</div>
+          <div style="flex:0 0 82px;text-align:right;font-size:.72rem;color:var(--muted)">${SAR(r.value)}</div>
+        </div>`;
+      }).join('');
+    }
+    renderBreakdown('wmp-by-type',    d=>d.investor_type, ['#1d6cb0','#6d28d9','#d97706','#0d7a3f','#be185d','#10935a']);
+    renderBreakdown('wmp-by-strategy',d=>d.strategy,      ['#0d7a3f','#d97706','#6d28d9','#1d6cb0']);
+    renderBreakdown('wmp-by-loc',     d=>d.deal_location, ['#0d7a3f','#1d6cb0','#d97706','#6d28d9','#be185d','#10935a']);
+
+    // ── ALL-DEALS TABLE ─────────────────────────────────────────────────
+    // Populate filter dropdowns
+    const uniq = (arr) => Array.from(new Set(arr.filter(Boolean))).sort();
+    const fwm      = document.getElementById('wmp-fwm');
+    const fstage   = document.getElementById('wmp-fstage');
+    const fstatus  = document.getElementById('wmp-fstatus');
+    const fstrat   = document.getElementById('wmp-fstrategy');
+    uniq(deals.map(d=>d.wm)).forEach(v=>fwm.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    uniq(deals.map(d=>d.stage)).forEach(v=>fstage.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    uniq(deals.map(d=>d.status)).forEach(v=>fstatus.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    uniq(deals.map(d=>d.strategy)).forEach(v=>fstrat.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    window._wmpDeals = deals;
+    window.wmpFilter();
+  }
+
+  // Filter function — callable from inputs
+  window.wmpFilter = function(){
+    const D = window.WM_PIPELINE_DATA;
+    if(!D) return;
+    const deals = window._wmpDeals || D.deals || [];
+    const q    = (document.getElementById('wmp-search')||{value:''}).value.toLowerCase().trim();
+    const fwm  = (document.getElementById('wmp-fwm')||{value:''}).value;
+    const fst  = (document.getElementById('wmp-fstage')||{value:''}).value;
+    const fss  = (document.getElementById('wmp-fstatus')||{value:''}).value;
+    const fstr = (document.getElementById('wmp-fstrategy')||{value:''}).value;
+    const hit = s => (s||'').toString().toLowerCase().includes(q);
+    const filtered = deals.filter(d =>
+      (!fwm  || d.wm===fwm) &&
+      (!fst  || d.stage===fst) &&
+      (!fss  || d.status===fss) &&
+      (!fstr || d.strategy===fstr) &&
+      (!q    || [d.deal,d.investor,d.wm,d.status,d.stage,d.strategy,d.deal_location,d.next_steps,d.comments].some(hit))
+    );
+    const valSeries = filtered.map(d=>d.value||0);
+    const daysSeries = filtered.map(d=>d.days_since||0);
+
+    document.getElementById('wmp-deal-count').textContent =
+      `${filtered.length} of ${deals.length} deals · Value ${SAR(filtered.reduce((a,d)=>a+(d.value||0),0))}`;
+
+    const thead = `<thead><tr>
+      <th>Date</th><th>WM</th><th>Investor</th><th>Deal</th><th>Location</th>
+      <th>Strategy</th><th class="n">Value</th><th>Leverage</th>
+      <th>Stage</th><th>Sub-stage</th><th>Last Contact</th><th class="n">Days</th><th>Next Steps</th>
+    </tr></thead>`;
+    const rows = filtered.map(d => {
+      const parent = d.stage || subStageToParent(d.status, D.taxonomy) || '';
+      const color  = colorFor(parent);
+      const sschip = d.status ? `<span style="background:${color}22;color:${color};padding:2px 8px;border-radius:4px;font-size:.64rem;font-weight:700">${d.status}</span>` : '';
+      const stchip = d.stage  ? `<span style="background:${color}22;color:${color};padding:2px 8px;border-radius:4px;font-size:.64rem;font-weight:700">${d.stage}</span>` : '';
+      return `<tr>
+        <td>${d.date||'—'}</td>
+        <td>${d.wm||'—'}</td>
+        <td style="font-weight:600">${d.investor||'—'}</td>
+        <td>${d.deal||'—'}</td>
+        <td>${d.deal_location||'—'}</td>
+        <td>${d.strategy||'—'}</td>
+        <td class="nb ${cfClass(d.value||0,valSeries,1)}">${d.value?SAR(d.value):'TBC'}</td>
+        <td>${d.leverage||'—'}</td>
+        <td>${stchip}</td>
+        <td>${sschip}</td>
+        <td>${d.last_contact||'—'}</td>
+        <td class="n ${d.days_since!=null?cfClass(d.days_since,daysSeries,0):''}">${d.days_since!=null?Math.round(d.days_since):'—'}</td>
+        <td style="max-width:320px;white-space:normal;font-size:.72rem;color:var(--muted)">${(d.next_steps||'').replace(/</g,'&lt;').slice(0,200)}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('wmp-deals-table').innerHTML = thead + '<tbody>' + rows + '</tbody>';
+  };
+
+  // Render on page load AND when the tab becomes active (so charts size correctly)
+  document.addEventListener('DOMContentLoaded', renderWMPipeline);
+  if(document.readyState !== 'loading') renderWMPipeline();
+})();
 </script>
 </body>
 </html>
