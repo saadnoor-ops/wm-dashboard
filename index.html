@@ -690,8 +690,8 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
         <button class="preset" data-preset="yearly">Yearly</button>
       </div>
       <div class="filter-inputs">
-        <label>From</label><input type="date" id="f-start" value="2026-04-17"/>
-        <label>To</label><input type="date" id="f-end" value="2026-04-23"/>
+        <label>From</label><input type="date" id="f-start" value="2026-04-18"/>
+        <label>To</label><input type="date" id="f-end" value="2026-04-24"/>
         <button class="btn" onclick="loadData()">Apply</button>
       </div>
       <select id="f-wm" style="display:none"><option value="">All</option></select>
@@ -846,6 +846,13 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
 
   <!-- ═══ TAB: WM PIPELINE ═══ -->
   <div class="top-tab-content" id="pipeline-tab">
+
+    <!-- SENTIMENT / NOTE-ANALYSIS — 10 criteria (Lead Quality / Effort Quality / Pipeline Integrity) -->
+    <div class="sec">
+      <div class="sec-title"><span class="d" style="background:#0d7a3f"></span>WM Sentiment Analysis — HOD Meeting Notes (10-Criteria Scorecard)</div>
+      <div class="sec-sub" id="mna-subtitle">Lead Quality · Effort Quality · Pipeline Integrity · <span id="mna-window"></span></div>
+      <div id="mna-container" style="margin-top:14px"></div>
+    </div>
 
     <!-- PIPELINE KPI CARDS -->
     <div class="sec">
@@ -2408,6 +2415,120 @@ setInterval(()=>{
     console.log('Auto-refreshed at',new Date().toLocaleTimeString());
   }).catch(()=>{});
 }, 300000); // 5 minutes
+
+// ══════════════════════════════════════════════════════════════════════════
+// WM Meeting Notes tab — 10-criteria Sentiment / Note Analysis
+// Loaded from meeting_notes_analysis.json (regenerated on demand via Claude Code)
+// ══════════════════════════════════════════════════════════════════════════
+(function(){
+  function bandColor(score){
+    if(score==null||isNaN(score)) return {fg:'var(--muted)', bg:'var(--surface2)', label:'—'};
+    if(score<3)  return {fg:'#dc2626', bg:'rgba(220,38,38,.12)',  label:'Red'};
+    if(score<5)  return {fg:'#ea580c', bg:'rgba(234,88,12,.14)',  label:'Orange'};
+    if(score<7)  return {fg:'#ca8a04', bg:'rgba(202,138,4,.16)',  label:'Yellow'};
+    if(score<9)  return {fg:'#16a34a', bg:'rgba(22,163,74,.14)',  label:'Light Green'};
+    return             {fg:'#15803d', bg:'rgba(21,128,61,.16)',  label:'Dark Green'};
+  }
+  function renderMNA(D){
+    const el = document.getElementById('mna-container');
+    if(!el) return;
+    if(!D || !D.wms){
+      el.innerHTML = `<div class="card" style="padding:20px;color:var(--muted);font-size:.78rem">Analysis not yet generated. Ask Claude Code to run the meeting-note analysis.</div>`;
+      return;
+    }
+    // Window + generated-at banner
+    const w = D.window || {};
+    const win = document.getElementById('mna-window');
+    if(win){ win.textContent = `Window ${w.start} → ${w.end} · Generated ${String(D.generated_at||'').replace('T',' ')}`; }
+
+    const labels = D.criteria_labels || {};
+    const catMap = D.categories || {};
+    // Team roll-up banner
+    const tr = D.team_roll_up || {};
+    const rollup = `<div class="card" style="padding:12px 14px;margin-bottom:14px;border-left:4px solid var(--bayut-green);background:linear-gradient(135deg,#ffffff,var(--g6))">
+      <div style="font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--bayut-green);margin-bottom:4px">Team Roll-up</div>
+      <div style="font-size:.82rem;color:var(--text);line-height:1.45">${tr.headline||''}</div>
+      ${tr.process_issues&&tr.process_issues.length?`<ul style="margin-top:6px;padding-left:18px;font-size:.72rem;color:var(--muted);line-height:1.5">${tr.process_issues.map(x=>'<li>'+x+'</li>').join('')}</ul>`:''}
+      ${tr.top_performer_by_composite?`<div style="font-size:.72rem;color:var(--text);margin-top:6px"><b>Top performer:</b> ${tr.top_performer_by_composite} · <b>Needs attention:</b> ${tr.bottom_performer_with_notes_by_composite||'—'}</div>`:''}
+    </div>`;
+
+    // Per-WM cards
+    const cards = (D.wms||[]).map(wm => {
+      const c = wm.category_scores || {};
+      const sc = wm.scores || {};
+      const composite = c.Composite;
+      const compBand = bandColor(composite);
+      const catRow = ['Lead Quality','Effort Quality','Pipeline Integrity'].map(k=>{
+        const v = c[k]; const b = bandColor(v);
+        return `<div style="flex:1;min-width:0;background:${b.bg};border-radius:8px;padding:8px 10px;border-left:3px solid ${b.fg}">
+          <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700">${k}</div>
+          <div style="font-size:1.05rem;font-weight:700;color:${b.fg};margin-top:2px">${v==null?'—':v.toFixed(1)}</div>
+        </div>`;
+      }).join('');
+      // 10-criterion breakdown grid
+      const critGrid = Object.keys(labels).sort((a,b)=>+a-+b).map(k=>{
+        const cr = sc[k]||{}; const b = bandColor(cr.score);
+        // Figure out which category this criterion belongs to
+        let catName='';
+        for(const cn of Object.keys(catMap)){ if((catMap[cn]||[]).includes(+k)){ catName=cn; break; } }
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${b.fg};border-radius:8px;padding:10px 12px;cursor:default">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div style="font-size:.6rem;color:var(--muted);font-weight:700">#${k}</div>
+            <div style="font-size:.74rem;font-weight:700;color:var(--bayut-dark);flex:1;line-height:1.3">${labels[k]||''}</div>
+            <div style="background:${b.bg};color:${b.fg};padding:2px 10px;border-radius:10px;font-size:.72rem;font-weight:700">${cr.score==null?'N/A':cr.score}</div>
+          </div>
+          <div style="font-size:.64rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.3px">${catName}</div>
+          <div style="font-size:.72rem;color:var(--text);margin-top:6px;line-height:1.5">${(cr.reasoning||'').replace(/</g,'&lt;')}</div>
+        </div>`;
+      }).join('');
+      // Flagged contacts
+      const fc = (wm.flagged_contacts||[]);
+      const flagged = fc.length ? `<div style="margin-top:14px"><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#dc2626;margin-bottom:6px">Flagged for HOD attention</div>
+        <div style="display:grid;gap:6px">${fc.map(x=>`<div style="background:rgba(220,38,38,.06);border-left:3px solid #dc2626;border-radius:6px;padding:8px 10px;font-size:.72rem;color:var(--text);line-height:1.45"><b style="color:#dc2626">${x.contact}</b>: ${x.reason}</div>`).join('')}</div></div>` : '';
+      // CRM divergence
+      const cd = (wm.crm_divergence||[]);
+      const divergence = cd.length ? `<div style="margin-top:12px"><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#ea580c;margin-bottom:6px">CRM vs Reality Divergence</div>
+        <div style="display:grid;gap:6px">${cd.map(x=>`<div style="background:rgba(234,88,12,.06);border-left:3px solid #ea580c;border-radius:6px;padding:8px 10px;font-size:.72rem;color:var(--text);line-height:1.45">${x.note}</div>`).join('')}</div></div>` : '';
+
+      // If has_notes is false, show an inline notice at the top
+      const noNotesBanner = (!wm.has_notes) ? `<div style="background:rgba(234,88,12,.1);border:1px dashed #ea580c;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.72rem;color:#ea580c"><b>No HOD meeting notes logged in window.</b> Criteria 1–7 marked N/A. Only CRM-based criteria (8, 9, 10) scored.</div>` : '';
+
+      const initials = wm.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+
+      return `<div class="card" style="padding:16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--bayut-green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem">${initials}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:1rem;color:var(--bayut-dark)">${wm.name}</div>
+            <div style="font-size:.66rem;color:var(--muted)">${wm.notes_count} note${wm.notes_count===1?'':'s'} · ${wm.tasks_count} tasks · ${wm.crm_inquiries} CRM inquiries</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700">Composite</div>
+            <div style="background:${compBand.bg};color:${compBand.fg};padding:4px 12px;border-radius:16px;font-size:1rem;font-weight:700;display:inline-block;margin-top:2px">${composite==null?'N/A':composite.toFixed(1)} / 10</div>
+          </div>
+        </div>
+        ${noNotesBanner}
+        <div style="display:flex;gap:8px;margin-bottom:12px">${catRow}</div>
+        <details><summary style="cursor:pointer;font-size:.72rem;color:var(--bayut-green);font-weight:700;margin-bottom:8px">Show per-criterion detail</summary>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:8px;margin-top:8px">${critGrid}</div>
+        </details>
+        ${flagged}
+        ${divergence}
+      </div>`;
+    }).join('');
+
+    el.innerHTML = rollup + cards;
+  }
+
+  function loadMNA(){
+    fetch('/meeting_notes_analysis.json', {cache:'no-cache'})
+      .then(r => r.ok ? r.json() : null)
+      .then(d => renderMNA(d))
+      .catch(() => renderMNA(null));
+  }
+  document.addEventListener('DOMContentLoaded', loadMNA);
+  if(document.readyState !== 'loading') loadMNA();
+})();
 
 // ══════════════════════════════════════════════════════════════════════════
 // WM PIPELINE tab — static Excel-driven view
