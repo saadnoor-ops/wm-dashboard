@@ -854,53 +854,6 @@ header p,body.light header p,body.light.theme-bayut header p{color:rgba(255,255,
       <div id="mna-container" style="margin-top:14px"></div>
     </div>
 
-    <!-- PIPELINE KPI CARDS -->
-    <div class="sec">
-      <div class="sec-title"><span class="d" style="background:#f59e0b"></span>Bayut KSA — Wealth Manager Pipeline</div>
-      <div class="sec-sub">Deal tracking across all stages &middot; Probability &amp; next steps analyzed from meeting notes</div>
-      <div class="kpi-grid" id="pipeline-kpis"></div>
-    </div>
-
-    <!-- WM FILTER CHIPS -->
-    <div class="sec" style="margin-bottom:8px">
-      <div class="pipeline-chips" id="pipeline-chips"></div>
-    </div>
-
-    <!-- STAGE FILTER + SEARCH -->
-    <div class="sec" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:12px;color:#94a3b8;font-weight:600">STAGE</span>
-        <div class="stage-filters" id="stage-filters"></div>
-        <input type="text" id="pipeline-search" placeholder="Search deal, client, stage..." oninput="filterPipeline()"
-          style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;flex:1;min-width:200px"/>
-      </div>
-      <div style="margin-top:8px;font-size:10px;color:#64748b">
-        Stage key: <span style="color:#6366f1">&#9679; Early Engagement</span> &nbsp;
-        <span style="color:#10b981">&#9679; Information Shared</span> &nbsp;
-        <span style="color:#f59e0b">&#9679; Due Diligence</span> &nbsp;
-        <span style="color:#ef4444">&#9679; Deal Making</span> &nbsp;
-        <span style="color:#94a3b8">&#9679; On Hold</span> &nbsp;
-        <span style="color:#64748b">&#9679; Paused</span>
-      </div>
-    </div>
-
-    <!-- PER-WM DEAL TABLES -->
-    <div id="pipeline-wm-tables"></div>
-
-    <!-- MEETING NOTES -->
-    <div class="sec" style="margin-top:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
-        <div>
-          <div class="sec-title" style="margin-bottom:2px"><span class="d" style="background:#6366f1"></span>Latest Meeting Notes</div>
-          <div class="sec-sub" style="margin-bottom:0">Most recent meeting updates from wealth managers</div>
-        </div>
-        <select id="notes-wm-filter" onchange="filterNotes()" style="background:#1e2534;border:1px solid #3a4556;color:#e2e8f0;border-radius:8px;padding:7px 12px;font-size:12px;outline:none;min-width:180px">
-          <option value="">All Wealth Managers</option>
-        </select>
-      </div>
-      <div id="pipeline-notes"></div>
-    </div>
-
   </div>
 
   <!-- ═══ TAB: WM PIPELINE ═══ -->
