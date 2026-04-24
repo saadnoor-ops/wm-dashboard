@@ -1,7 +1,8 @@
 {
-  "generated_at": "2026-04-24T10:14:03",
+  "generated_at": "2026-04-24T10:45:00",
   "window": {"start": "2026-04-18", "end": "2026-04-24"},
   "framework": "10 Benchmark Criteria — HOD-WM Meeting Note Analysis (Lead Quality / Effort Quality / Pipeline Integrity)",
+  "source": "propforce_sa__management_meetings (meeting_type='morning_meeting') joined via management_meeting_attendees — includes Scott × WM 1:1s, Team Meeting, and self-logged Daily Updates",
   "categories": {
     "Lead Quality": [1, 2, 3, 8],
     "Effort Quality": [5, 6, 9],
@@ -23,152 +24,173 @@
     {
       "name": "Ryan Dougan",
       "id": 777489,
-      "notes_count": 4,
+      "notes_count": 8,
       "tasks_count": 29,
       "crm_inquiries": 69,
       "has_notes": true,
       "scores": {
-        "1":  {"score": 8, "reasoning": "Almost every contact is named with institution and context: Claus Bruch (Kuehne Holding, Germany), Ehtizaz Chaudhry (Brooks Capital), Jesey Singh (Peak Point Partners NY), Mohammed Fakhroo (Al Mahhar Holding), Abdulhadi Al Sehlawi, Mark Capelle (White Rabbit Capital). Anonymous entries are absent. Loses marks for a cluster of Qatar contacts introduced in one sweep without yet having individual capital profiles fleshed out."},
-        "2":  {"score": 7, "reasoning": "Textbook mandate extraction on Mohammed Fakhroo: 'Ticket size flexible, small to c.SAR 100m, yield dependent. Primary focus residential, open to mixed use, preference for stabilised with core plus refurb. Riyadh primary target. Qatar benchmark c.11-12% unleveraged gross at 10-15m ticket.' Partial extraction on Abdulhadi Al Sehlawi (£7M Marylebone benchmark, farming background, interested in Saudi). Many newer contacts shallow on first touch — acceptable for intro stage but needs depth by 3rd interaction."},
-        "3":  {"score": 7, "reasoning": "Direct engagement with principals (Mohammed Fakhroo — owner, Abdulhadi Al Sehlawi, Sheikh Mohammed Bin Faisal — Vice Chairman + son of chairman). But a recurring gatekeeper pattern on Qatar cluster: 'Arrange call with Nada PA', 'one of his team will get in contact', 'Ali to discuss internally and come back to me'. Needs documented escalation path to principals."},
-        "4":  {"score": 8, "reasoning": "Dominant profile is investor-deployer. Introducers are explicit and clearly labelled: Hani Lashin (Levvee Hospitality — Cairo introducer), Khalid Al Issy (Dubai Holding / Nakheel), Mark Capelle (White Rabbit), Slavita-equivalent contacts absent. Roughly 4-5 introducers of ~25 contacts ≈ 20% — healthy ratio."},
-        "5":  {"score": 7, "reasoning": "Strong on high-value contacts: 'Meeting confirmed tomorrow 6pm CET' (Jesey Singh), 'Arranged to speak tomorrow 1pm CET' (Abdulhadi), 'Call arranged tomorrow 15.30' (Fakhroo), 'confirming for 28/04' (Alex Macri), 'arranged meeting 28/04' (Mark Capelle). Vague on filler contacts: 'No ans, sent msg' repeats across Ahmed Al Abdulla, Ali Al Abdullah, Mohammed Al Emadi, Abdulaziz Al Sulaiti, Jaber Al Musalam without escalation strategy."},
-        "6":  {"score": 7, "reasoning": "Agnes Nag example is best-practice: 'Shared Bayut Al Hayi, 31 unit example and outlined key concerns around structure, downside and exit for a few of her clients' — specific deal, specific rationale, anticipated objections. Elsewhere, 'overview' and 'various' references drop the match quality (Power International, AlMadar)."},
-        "7":  {"score": 9, "reasoning": "Notes read as strategic briefings: investor intelligence, market feedback, deal-matching hypotheses, yield benchmarks from adjacent markets (Qatar 11-12% unleveraged). No operational hygiene complaints or process clarifications — Ryan is bringing intelligence to the HOD, not receiving instructions."},
-        "8":  {"score": 6, "reasoning": "CRM: 69 inquiries — 14 at status=2 (active), 19 at status=11, 12 at status=109, 7 at status=85. Many named contacts in notes (Fakhroo, Abdulhadi, Peak Point) don't yet have matching CRM entries — creates reconciliation gap. Not a misstatement issue, but notes-to-CRM sync lags."},
-        "9":  {"score": 6, "reasoning": "Repeat 'No ans, sent msg' pattern across 6+ Qatar contacts over 3+ consecutive days without an escalation / de-prioritisation rationale. Not yet 21-day stale, but direction is wrong — contacts are being maintained without a documented plan to unlock."},
-        "10": {"score": 9, "reasoning": "29 tasks in 7 days: 12 IS shared + 6 IB shared + 7 messages + 2 calls + 1 Google Meet. Exceptional velocity — clearly converting meeting notes into proposal outreach the same week."}
+        "1":  {"score": 8, "reasoning": "Almost every contact is named with institution and capital context: Claus Bruch (Kuehne family office Germany, Lufthansa heirs), Ehtizaz Chaudhry + Nabil (Brooks Capital), Katherine Chan (CDO Platinum Estates, Hong Kong, $50M+ operational hospitality), Juan Louise Sagler (Platinum Spain partner), Jesey Singh (Peak Point Partners NY), Mohammed Fakhroo (Al Mahhar Holding), Mohammed Bin Faisal (Al Faisal Holding/ARTIC Vice Chairman + son of Chairman), Abdulhadi Al Sehlawi (principal), Agnes Nag (Aurea Capital), Mark Capelle (White Rabbit Capital). Qatar-cluster contacts (Alhazm Mall, Emirs office, HBJ Foundation) have lighter first-touch profiles but are institutionally grounded."},
+        "2":  {"score": 8, "reasoning": "Textbook mandate extraction on Mohammed Fakhroo: 'Ticket size flexible, small to c.SAR 100m, yield dependent. Primary focus residential, open to mixed use, preference for stabilised with core plus refurb. Riyadh primary target. Qatar benchmark c.11-12% unleveraged gross at 10-15m ticket.' Platinum Estates: '$50M+ operational hospitality, close to completion.' Kuehne family: '€25M+ villas Mallorca, logistics background, finishing Mallorca and Hamburg opera house before next ventures.' Qatari benchmark calibration (11-12% unleveraged = 100% occ, 70% realistic) reused as strategy input with Scott. Only cluster of newer Qatar contacts shallow on initial outreach."},
+        "3":  {"score": 8, "reasoning": "Direct engagement with principals throughout: Fakhroo (owner), Abdulhadi Al Sehlawi, Sheikh Mohammed Bin Faisal (Vice Chairman + son of chairman — approved to speak), Katherine Chan (CDO). Ali Kazma (CVO Power Int). Some gatekeeper routing on Qatar cluster ('Arrange call with Nada PA', 'one of his team will get in contact') but offset by a documented escalation path (reaching out to Al-Kuwari, Al-Jada, Al-Kabisi high-level individuals)."},
+        "4":  {"score": 8, "reasoning": "Investor-dominant. Explicit introducers (Hani Lashin — Levvee Hospitality, Khalid Al Issy — Dubai Holding/Nakheel, Mark Capelle — White Rabbit Capital) are purposefully used to unlock specific investor pools (Palm Jumeirah hotel owners, German RE PE). Roughly 4–5 introducers of ~25 contacts ≈ 20%. Well within healthy range."},
+        "5":  {"score": 8, "reasoning": "Scott × Ryan 1:1s have strong next-step specificity: 'Contact high-level individuals from Al Kuari, Al Jada, Alcabis in Qatar', 'Drop Bushra a message re contract', 'Prepare 2-3 high-level investment stock ideas for acquisition team', 'Message UAE contact re Scott's trip'. Daily Updates have crisper high-value dated actions: 'Meeting confirmed tomorrow 6pm CET' (Jesey Singh), 'Call arranged tomorrow 15.30' (Fakhroo), 'Meeting 28/04' (Alex Macri, Mark Capelle). Vague only on low-priority filler ('No ans, sent msg')."},
+        "6":  {"score": 8, "reasoning": "Agnes Nag best-practice: 'Shared Bayut Al Hayi, 31 unit example and outlined key concerns around structure, downside and exit for a few of her clients'. Qatari strategy conversation proposed specific deals (Maidan Village, Sappa) with yield-benchmark reasoning (11-12% unleveraged vs 70% occ reality, offset by entry discount + clear exit). Van Rosson Red Sea JV aligned to their brand focus. Kuehne family route considers logistics crossover angle. Only misses when a contact is too early-stage to match yet."},
+        "7":  {"score": 9, "reasoning": "Scott × Ryan 1:1s are peer-level strategy sessions: Qatari yield-benchmark calibration, Red Sea JV opportunity, Mecca/Medina hotels for Alfardan/Alfaisal, Platinum Estates deal shape, acquisitions-team alignment (Scott: 'we'll need to put together the deal proposals ourselves'), UAE trip coordination. Ryan brings specific deal ideas and market feedback to the HOD; Scott treats him as a peer. Only caveat: 04-22 session consumed heavily by personal contract dispute (operational, not deal intelligence) — temporarily lowers this criterion's reading."},
+        "8":  {"score": 7, "reasoning": "CRM: 69 inquiries — 14 at status=2 (active), 19 at status=11, 12 at status=109, 7 at status=85. Ryan's narrative references many contacts not yet in CRM (Fakhroo, Abdulhadi, Peak Point, Kuehne, Platinum Estates) — narrative is ahead of CRM, not contradicting it. Scott actively asked Ryan to update Hotel 101 date and clarify Moani family in CRM — hygiene gap acknowledged and remediated within the 1:1."},
+        "9":  {"score": 6, "reasoning": "Repeat 'No ans, sent msg' across Ahmed Al Abdulla, Ali Al Abdullah (Doha Port), Mohammed Al Emadi, Abdulaziz Al Sulaiti, Jaber Al Musalam over 3+ daily updates without an escalation or exit rationale. Qatar cluster concentration suggests a batch outreach where some will need pruning. Not yet 21-day stale but trend is wrong."},
+        "10": {"score": 9, "reasoning": "29 tasks in 7 days: 12 IS shared + 6 IB shared + 7 messages + 2 calls + 1 Google Meet. Exceptional velocity — converting meeting intel directly into proposal outreach the same week. Best in team."}
       },
-      "category_scores": {"Lead Quality": 7.0, "Effort Quality": 6.7, "Pipeline Integrity": 8.7, "Composite": 7.4},
+      "category_scores": {"Lead Quality": 7.75, "Effort Quality": 7.33, "Pipeline Integrity": 8.67, "Composite": 7.9},
       "flagged_contacts": [
-        {"contact": "Ahmed Al Abdulla", "reason": "Repeated 'No ans, sent msg' with no escalation strategy — approaching stale"},
-        {"contact": "Ali Al Abdullah (Doha Port)", "reason": "Same pattern — no progression"},
-        {"contact": "Mohammed Al Emadi (Alhazm Mall owner)", "reason": "'No ans, sent msg' — wrong-contact check warranted"},
-        {"contact": "Abdulaziz Al Sulaiti (HBJ Office)", "reason": "Unanswered outreach, no alternate channel"},
-        {"contact": "Jaber Saleh Al Musalam (Blue Group)", "reason": "Unanswered outreach"},
-        {"contact": "Qatar cluster gatekeeper pattern", "reason": "'Arrange call with Nada PA', 'one of his team will get in contact', 'Ali to discuss internally' — multiple principals routed via gatekeepers without a stated path to reach them"}
+        {"contact": "Ahmed Al Abdulla (Son of Dr Hussain Al Abdulla, Ex-QIA MD)", "reason": "Repeated 'No ans, sent msg' — stale watch, needs alternate channel"},
+        {"contact": "Ali Al Abdullah (Doha Port)", "reason": "Unanswered outreach across multiple days"},
+        {"contact": "Mohammed Al Emadi (Alhazm Mall owner)", "reason": "Unanswered outreach — wrong-contact check warranted"},
+        {"contact": "Abdulaziz Al Sulaiti (HBJ Office / Foundation)", "reason": "Unanswered — no alternate path documented"},
+        {"contact": "Jaber Saleh Al Musalam (Blue Group)", "reason": "Unanswered"},
+        {"contact": "Qatar cluster gatekeeper pattern", "reason": "'Arrange call with Nada PA', 'one of his team will get in contact', 'Ali to discuss internally' — need a documented path to the principals behind these PAs"}
       ],
       "crm_divergence": [
-        {"note": "Heavy recent note activity in Gulf/Qatar cluster not yet reflected in CRM entries — widening the gap between narrative and tracked pipeline stage."}
+        {"note": "Narrative references to Fakhroo / Abdulhadi / Platinum Estates / Kuehne / Peak Point / Van Rosson are not yet reflected in CRM entries — narrative is ahead, CRM catching up. Scott already chasing pipeline hygiene inside the 1:1s."}
       ]
     },
     {
       "name": "Justin James Beckwith",
       "id": 777490,
-      "notes_count": 3,
+      "notes_count": 7,
       "tasks_count": 6,
       "crm_inquiries": 96,
       "has_notes": true,
       "scores": {
-        "1":  {"score": 5, "reasoning": "Contacts ARE named with institutions (Gavin Kaye — CFO Courts Mammouth Mauritius; Ala — Senior RM RAKBank; Slavita Zada — Ocean Hills RE). Profile depth is high. But the framework defines legitimacy as capital profile plausibly meeting >10M SAR deployment — not one of the three is that. All are intermediaries/connectors. High-quality profiling, wrong contact type."},
-        "2":  {"score": 2, "reasoning": "Zero mandate extraction. No deployment quantum, asset class, structure, or timeline captured for any real investor this week — because no investor was engaged. Meeting with Gavin explicitly concludes 'direct investment from Gavin or his organization is unlikely'. Ala meeting deferred identification to a future 'collaborative review'."},
-        "3":  {"score": 1, "reasoning": "Textbook gatekeeper-stuck pattern. Gavin — own CFO role can't deploy + 'will explore potential introductions during his stay in Dubai'. Ala — banker, no named client, proposes 'targeted review to identify HNW individuals' for a future date. Slavita — legal rep / introducer. Zero direct engagement with a capital decision-maker in the window."},
-        "4":  {"score": 1, "reasoning": "3 of 3 note-logged contacts this week are introducers/connectors, not deployers. 100% introducer ratio. Framework threshold is >50% = not a WM pipeline. This week is 100%. Single clearest red flag of the five WMs."},
-        "5":  {"score": 3, "reasoning": "All next steps abstract, none named, none time-bound. 'Explore potential introductions' (Gavin), 'Identify and shortlist relevant clients' (Ala), 'Develop a formal partnership/engagement framework' (Slavita). Zero 'confirmed call Thursday 3pm'-style specificity."},
-        "6":  {"score": 2, "reasoning": "No deal-to-investor match in notes. Gavin note mentions 'smaller hotel opportunity' without a named deal or rationale linking to Gavin's network's stated preferences. No IS/IM shared with rationale. Generic network-building throughout."},
-        "7":  {"score": 5, "reasoning": "Notes are well-structured (Meeting Report format: Attendees / Discussion / Next Steps / Summary) — demonstrates process discipline. Content however is relationship-building narrative, not strategic deal intelligence or mandate-matching questions. Reads as a sales log, not an investor-intelligence brief."},
-        "8":  {"score": 4, "reasoning": "96 CRM inquiries total, 78 at status=1 (raw/new/unqualified) — 81% of pipeline never progressed past initial capture. Handful of 'active deal discussion' claims elsewhere would sit on a thin base. Backlog of unworked leads is itself a misclassification risk."},
-        "9":  {"score": 4, "reasoning": "Only 3 contacts advanced this week from a 96-inquiry pool, and 78 of those inquiries have status=1 (raw). Nothing is being requalified or retired. Framework rule — 'contacts without stage progression over 21+ days must have requalification or exit rationale' — is violated wholesale."},
-        "10": {"score": 3, "reasoning": "6 tasks in 7 days: 3 outdoor meetings (the 3 note-sessions), 2 IS shared, 1 IB shared, 0 IM, 0 calls, 0 messages. Compare to Ryan's 29 (12 IS / 6 IB). Low-effort-quality disguised as 'doing meetings'."}
+        "1":  {"score": 5, "reasoning": "Detailed profiles on Gavin Kaye (CFO Courts Mammouth, Mauritius), Ala (Sr RM RAKBank), Slavita Zada (Ocean Hills RE). All three are rich as profiles but NONE are capital deployers — all introducers. Active CRM contacts appear as placeholder handles: 'Mr Sad — Pakistani investor $30M expected to visit office', 'Mr Allah — Saudi resident $3M awaiting acquisition ideas', 'Abdullah Umbai (last contact 11/04)'. Framework calls for named individual + institution + capital profile — Justin has one of the three most of the time."},
+        "2":  {"score": 3, "reasoning": "Mr Allah ($3M) / Mr Sad ($30M) — only quantum captured, no asset class, structure, yield target, or timeline. Abdullah Ali — some location preference (North Riyadh, Qiddiya interest). George Collie — hotel in Medina. Gavin/Ala/Slavita explicitly concluded as introducers with no mandate because they're not principals. No textbook extraction anywhere in the week."},
+        "3":  {"score": 4, "reasoning": "Does engage some principals (George Collie for Medina hotel, Australian client for 6 villas via Amar, Abdullah Ali). But the three meetings Justin chose to log and narrate this week (Gavin, Ala, Slavita) are 100% gatekeeper/introducer. Pattern of engagement priority skews toward non-deployers. Sherim + 4 American Muslim partners is a principal cluster Justin is re-engaging — good. Mixed."},
+        "4":  {"score": 3, "reasoning": "Of Justin's 3 self-authored relationship notes this week, 3/3 are introducers — 100% ratio at the narrative level. Broader contact mix (Mr Sad, Mr Allah, Abdullah Ali, George Collie, Sherim) is investor-dominant BUT most are stalled ('awaiting acquisition ideas', 'last contact 11/04'). The pattern — engaging introducers hardest, letting named investors drift — is the framework's textbook red flag."},
+        "5":  {"score": 4, "reasoning": "Next steps in Scott × Justin 1:1s are overwhelmingly corrective/operational: 'Update pipeline notes for Abdullah Umbai', 'Follow up via email re Mr Allah 3M', 'Re-engage Sherim', 'Update all pipeline stages'. Scott drives most actions; Justin's own initiatives lack dates ('Work to secure time slot', 'Develop framework'). Gavin/Ala/Slavita notes explicitly end with 'explore potential introductions', 'identify relevant clients', 'develop formal partnership framework' — all abstract."},
+        "6":  {"score": 4, "reasoning": "NHC 6-villa → Sherim (American Muslims, iqama route) has proper match logic. 6 villas → Australian investor tracked. Elsewhere thin: Mr Allah 'awaiting acquisition ideas' — Scott flagged this isn't being actively worked ('no one is currently working on generating these options'). Gavin-Ala-Slavita notes contain no deal-to-investor match logic at all; they're relationship frameworks."},
+        "7":  {"score": 4, "reasoning": "Textbook red flag. Scott × Justin 1:1s dominated by: pipeline hygiene chasing ('update contact notes for Abdullah Umbai to demonstrate ongoing conversations'), agent performance correction (Castle/Malik bypassing internal system — 'embarrassing'), operational admin (fee negotiation 1.5% vs 3.5%, teaser document, contracts), and one personal distraction (04-23 — Justin took a live call during the 1:1 about his own personal property financing). Scott explicitly prompts: 'think about 1 or 2 strategic product requirements… focus on where the team should focus product-wise before the 3 PM meeting' — implying this hasn't been happening. Direction of information is HOD → WM, not the other way."},
+        "8":  {"score": 3, "reasoning": "96 CRM inquiries — 78 at status=1 (raw/unqualified) = 81% of pipeline never progressed past initial capture. Abdullah Umbai 'last contact 11/04' explicitly flagged by Scott as stale. Any claim of 'active deal discussion' above this base is likely inflated. Systematic pipeline hygiene gap."},
+        "9":  {"score": 4, "reasoning": "Abdullah Umbai explicitly stale (Scott-flagged). Mr Allah 'awaiting acquisition ideas' — the WM is the blocker, not the investor. 78-lead status=1 backlog suggests no requalification / exit discipline. Some active work on 6-villa re-engagement with Sherim — a positive."},
+        "10": {"score": 3, "reasoning": "6 tasks in 7 days: 3 outdoor meetings (the 3 note sessions themselves), 2 IS shared, 1 IB shared, 0 IM, 0 calls, 0 messages. ~20% of Ryan's output. Low-velocity pattern hidden behind 'doing meetings' optics."}
       },
-      "category_scores": {"Lead Quality": 3.0, "Effort Quality": 3.3, "Pipeline Integrity": 3.0, "Composite": 3.1},
+      "category_scores": {"Lead Quality": 3.75, "Effort Quality": 3.67, "Pipeline Integrity": 3.33, "Composite": 3.6},
       "flagged_contacts": [
-        {"contact": "Gavin Kaye", "reason": "Explicitly not a deployer — 'direct investment unlikely'. Only strategic value is introductions that haven't materialised this week."},
-        {"contact": "Ala (RAKBank Private Banking)", "reason": "Banker / connector — no named end-client. Week's deliverable is a future 'collaborative review', not an engagement."},
-        {"contact": "Slavita Zada (Ocean Hills RE)", "reason": "Translator / legal rep / introducer role. Commission-based framework discussion, no named prospects surfaced."},
-        {"contact": "Unworked CRM backlog (78 inquiries at status=1)", "reason": "81% of pipeline never progressed — requires triage sweep"}
+        {"contact": "Gavin Kaye (CFO Courts Mammouth)", "reason": "Explicitly 'direct investment unlikely' — introducer-only. Only strategic value is introductions not yet materialised."},
+        {"contact": "Ala (RAKBank Private Banking)", "reason": "Banker connector with no named end-client. Deliverable is a future 'collaborative review', not an investor engagement."},
+        {"contact": "Slavita Zada (Ocean Hills RE)", "reason": "Legal rep / translator / introducer on commission basis. No named prospects surfaced."},
+        {"contact": "Abdullah Umbai", "reason": "Last contact 11/04 — Scott explicitly flagged as stale and asked for pipeline note update"},
+        {"contact": "Mr Allah ($3M awaiting ideas)", "reason": "Scott flagged: 'no one is currently working on generating these options'. WM is the blocker."},
+        {"contact": "Unworked CRM backlog (78 at status=1)", "reason": "81% of pipeline never progressed past initial capture — needs triage sweep"}
       ],
       "crm_divergence": [
-        {"note": "Pipeline concentration at status=1 (78/96) means almost any claim of 'Active Deal Discussion' stage in reporting will be overstated relative to reality."},
-        {"note": "Introducer meetings are being logged as outdoor tasks — inflates 'meeting done' count without advancing an investor deal."}
+        {"note": "Pipeline concentration at status=1 (78/96) means any claim of 'Active Deal Discussion' stage rolls up on a thin base."},
+        {"note": "Introducer meetings (Gavin, Ala, Slavita) are being logged as outdoor tasks — inflates 'meeting done' count without advancing a named investor deal."},
+        {"note": "Scott explicitly asked Justin to update Abdullah Umbai's pipeline date — HOD is chasing CRM hygiene rather than discussing deal movement."}
       ]
     },
     {
       "name": "Alshareef Al-Shareef",
       "id": 777564,
-      "notes_count": 0,
+      "notes_count": 4,
       "tasks_count": 7,
       "crm_inquiries": 23,
-      "has_notes": false,
+      "has_notes": true,
       "scores": {
-        "1":  {"score": null, "reasoning": "No morning-meeting notes logged in the 7-day window — cannot assess investor profile legitimacy."},
-        "2":  {"score": null, "reasoning": "No HOD updates — mandate extraction cannot be evaluated."},
-        "3":  {"score": null, "reasoning": "No narrative — cannot tell who was engaged or at what level."},
-        "4":  {"score": null, "reasoning": "No contact descriptions to classify as introducer vs investor."},
-        "5":  {"score": null, "reasoning": "No next-step language to evaluate."},
-        "6":  {"score": null, "reasoning": "No deal-match narrative available."},
-        "7":  {"score": null, "reasoning": "HOD interaction did not occur (or was not logged)."},
-        "8":  {"score": 5, "reasoning": "CRM: 23 inquiries, 16 at status=2 (active), 5 at status=1. Pipeline is tight and mostly active — good shape — but without note narrative it's impossible to confirm stage claims."},
-        "9":  {"score": 5, "reasoning": "Small pipeline (23) — limited stale-contact risk surface, but no written evidence of active management."},
-        "10": {"score": 3, "reasoning": "7 tasks in 7 days, all `contact_client_call`. Zero proposals shared, zero meetings, zero non-call outreach. Pure prospecting motion, no conversion-stage movement."}
+        "1":  {"score": 6, "reasoning": "Named contacts with institutional context: Abdullah Sabahi (CFO Dal Baraka Holding Group, board ITN Capital + Alsham Capital, chairman Albera Bank Algeria & Tunisia), Muhammad Sharaf (Head of Treasury Islamic Development Bank, ex-NCB colleague), Abd Aizi (retired F-16 pilot, owns Turkish restaurant chain), Abdulasahi (ex-Dal Albaraka senior, still on board), Pwmer + Ida Ferris (executive director, Denmark), Equinox + Abdul Salman, Bindwood (via Ben's wife — Russian partner's family office). Strong profile depth on core contacts; lighter on newer referrals."},
+        "2":  {"score": 5, "reasoning": "Abdullah Sabahi proactively asked about RE fund management — mandate signal captured. IDB (Sharaf) inferred preference for 'fund type and size rather than direct transactions'. Equinox — hospitality preference confirmed, but built vs development split pending. No explicit quantum / yield / timeline capture on any single contact — closer to first-date reconnaissance than extracted mandate."},
+        "3":  {"score": 7, "reasoning": "Strong direct principal engagement — CFOs (Abdullah Sabahi), board members (ITN, Alsham, Albera), department heads (Sharaf at IDB), owner-operators (Abd Aizi). Pwmer routed via Ida Ferris (executive director, legitimate pathway). Bindwood routed via Ben's wife (purposeful, documented). Minimal gatekeeper-stuck pattern."},
+        "4":  {"score": 7, "reasoning": "Investor-dominant with purposeful introducer use: Abdullah J introducing 2 new investor contacts (Abd Aizi + Abdulasahi). Most of Alshareef's direct book is capital-deploying institutions or individuals."},
+        "5":  {"score": 6, "reasoning": "'Call Abd Aizi', 'Call Abdulasahi', 'Confirm Equinox built/development preference', 'Update pipeline today', 'Send KSA overview + Bet info to GI and Abdah after their emails'. Most actions named and short-term. But pipeline update 'delayed due to Wi-Fi issues' — a low-friction operational excuse inside a Scott 1:1."},
+        "6":  {"score": 5, "reasoning": "Scott proposes Mecca operational hotels for Equinox (built vs development pending). Abdullah Sabahi / IDB fund appetite being fed into RE fund track. Match logic exists but is mostly HOD-led — Alshareef hasn't yet documented his own mandate → deal rationales in notes."},
+        "7":  {"score": 5, "reasoning": "Scott × Alshareef 1:1s have strategic moments (Abdullah Sabahi reference-call debrief, IDB capital placement memory from NCB era, Jeddah trip strategy), but significant operational content (pipeline update chasing, Prop Force CRM hygiene for Abdulasahi, Wi-Fi excuses). Biggest flag: missed 04-23 daily catch-up (present=0, note body empty: 'Daily Catch Up'). Framework expects HOD presence."},
+        "8":  {"score": 5, "reasoning": "23 CRM inquiries — 16 at status=2 (active), 5 at status=1. Clean, tight pipeline. Minor drift: Abdulasahi not yet surfacing in Prop Force (system/timing issue, flagged in 1:1)."},
+        "9":  {"score": 5, "reasoning": "Small pipeline keeps the stale surface tight. Pwmer on ongoing hold (waiting for Ida Ferris to come back from analysts) — legitimate but open-ended. No documented 21-day stale contacts yet."},
+        "10": {"score": 3, "reasoning": "7 tasks in 7 days — all contact_client_call. Zero IS / IM / IB / meeting-done tasks. Pure prospecting motion, no proposals landing. Conversion funnel isn't moving."}
       },
-      "category_scores": {"Lead Quality": null, "Effort Quality": null, "Pipeline Integrity": null, "Composite": null},
+      "category_scores": {"Lead Quality": 5.75, "Effort Quality": 5.33, "Pipeline Integrity": 5.0, "Composite": 5.4},
       "flagged_contacts": [
-        {"contact": "(process flag)", "reason": "Zero HOD meeting notes in the 7-day window — discipline / accountability gap"}
+        {"contact": "Missed Scott × Alshareef on 2026-04-23", "reason": "present=0 on the daily catch-up — framework expects consistent HOD engagement"},
+        {"contact": "Pwmer / Ida Ferris", "reason": "Ongoing hold waiting on analysts — needs a forcing function or exit date"},
+        {"contact": "Abdulasahi (pending Prop Force)", "reason": "CRM delay preventing call prep — follow up on Prop Force support ticket"}
       ],
       "crm_divergence": [
-        {"note": "No narrative stream to cross-reference with CRM — analytical blind spot."}
+        {"note": "Narrative has 5+ active engagements (Sabahi, Sharaf, Equinox, Bindwood, Pwmer); CRM shows only 16 active — several reference-call contacts not yet surfaced in Prop Force."},
+        {"note": "7 call tasks with zero proposal tasks suggests CRM will stay at the call-activity stage even as relationships warm."}
       ]
     },
     {
       "name": "Garima Bhargava",
       "id": 777567,
-      "notes_count": 0,
+      "notes_count": 4,
       "tasks_count": 21,
       "crm_inquiries": 90,
-      "has_notes": false,
+      "has_notes": true,
       "scores": {
-        "1":  {"score": null, "reasoning": "No morning-meeting notes logged in the 7-day window."},
-        "2":  {"score": null, "reasoning": "No HOD updates — mandate depth cannot be assessed."},
-        "3":  {"score": null, "reasoning": "No narrative."},
-        "4":  {"score": null, "reasoning": "No contact descriptions."},
-        "5":  {"score": null, "reasoning": "No next-step language."},
-        "6":  {"score": null, "reasoning": "No deal-match narrative."},
-        "7":  {"score": null, "reasoning": "HOD interaction not logged."},
-        "8":  {"score": 5, "reasoning": "CRM: 90 inquiries — 27 at status=1, 24 at status=2, 11 at status=17. Broad pipeline, reasonably active, but untestable vs narrative."},
-        "9":  {"score": 5, "reasoning": "Large pipeline (90), diverse statuses. Without notes, cannot spot managed-but-not-progressed contacts."},
-        "10": {"score": 7, "reasoning": "21 tasks in 7 days, diverse channels: 5 calls, 4 messages, 2 Google Meet, 2 outdoor, 1 IM shared, 1 IM rejected, 1 IB shared, 1 WhatsApp call, 2 SMS, 1 outdoor-arrange. Healthy multi-channel activity with proposals moving. Clear conversion motion."}
+        "1":  {"score": 7, "reasoning": "Named contacts with institutional context: Ajit Prabhu (US entrepreneur with Singapore + Bangalore offices, family office, likes leverage, invests in Indian commercial office spaces), Hanuman Jushi (Head of M&A, Embassy Group — developer, South India), Abhishek (previously Algo, now investing via Nebulum fund), Pratik (individual investor considering settling in Saudi), Chennai family office (conservative income-generating preference), Samir, TJI (RE project launch in India), Green World Advisors (14 jurisdictions). Mumbai institutional capital contacts (introducer in Mumbai network)."},
+        "2":  {"score": 6, "reasoning": "Chennai family office — 'ticket too large, prefers fund structure' (clear quantum signal). Ajit Prabhu — 'likes leverage, invests in commercial office spaces across India' (asset class + structure preference). Mumbai institutional contacts — '$20-30M minimum for IPOs / large projects'. Abhishek — MOU/NDA pending for Nebulum. Good breadth, moderate per-contact depth. No single textbook-level extraction like Ryan's Fakhroo case."},
+        "3":  {"score": 6, "reasoning": "Targeting CIO of Ajit Prabhu family office ('trying to get CIO to consider an active mandate in Saudi') — principal-level. Abhishek direct. Hanuman Jushi = M&A head of Embassy Group. Samir + TJI appear to be principals but response rate is the issue. No clear gatekeeper-stuck pattern; routing through introducers (Pratik → his 15yr-Saudi friend) is deliberate."},
+        "4":  {"score": 7, "reasoning": "Pipeline skews investor: Abhishek, Chennai family office, Ajit Prabhu family office, Samir, TJI, Hanuman Jushi. Introducers used purposefully: Pratik (→ Saudi friend), Green World Advisors (14-jurisdiction gateway), Mumbai institutional contacts network. Ratio well under the 50% warning line."},
+        "5":  {"score": 6, "reasoning": "'Schedule introductory call with Hanuman Jushi and Scott', 'Schedule advisor call with Green World Advisors', 'Finalize Mecca Medina document edits today', 'Schedule 2 follow-up meetings with Scott to activate remaining pipeline'. Moderately specific; some tasks depend on Scott's MOU draft or Algo Edge review — legitimate dependencies."},
+        "6":  {"score": 6, "reasoning": "Chennai family office → Nebulum fund (ticket size → fund structure): correct match logic. Abhishek → Nebulum fund with MOU/NDA track. Ajit Prabhu family office (commercial office + leverage) → Saudi CRE active mandate pitch. Mumbai institutional contacts → IPO / fundraising rail. Reasonable rationale per contact, though not always written as explicit rationale-for-match in the notes."},
+        "7":  {"score": 6, "reasoning": "Scott × Garima sessions include strategic discussion (fund ticket sizing for Indian investors, institutional capital routing via Mumbai, webinar strategy with Karan, distribution fee framework). Alongside operational: Nibulum document updates, Mecca Medina tax mention corrections, Algo Edge review workflow. Mixed — strategic when on prospect strategy, operational when on document workflow."},
+        "8":  {"score": 6, "reasoning": "90 CRM inquiries — 27 status=1, 24 status=2, 11 status=17, 10 at status=10, etc. Broader distribution than Justin's. Narrative contacts largely align: Abhishek pre-MOU, Samir travel-hold, TJI unresponsive, Chennai family office fund-preference documented. Some drift inevitable at this scale."},
+        "9":  {"score": 5, "reasoning": "Samir 'struggling to get a hold of due to travel'. TJI 'busy launching RE project, has not responded'. Explicit non-response acknowledgment — good discipline. But no dated requalification or exit rationale — meets the 21-day warning threshold trend."},
+        "10": {"score": 7, "reasoning": "21 tasks in 7 days — diverse: 5 calls, 4 messages, 2 Google Meet, 2 outdoor, 1 IB shared, 1 IM shared, 1 IM rejected, 1 WhatsApp call, 1 WhatsApp message, 2 SMS, 1 outdoor-arrange. Proposals moving (IB + IM), mixed-channel outreach. Healthy conversion motion."}
       },
-      "category_scores": {"Lead Quality": null, "Effort Quality": null, "Pipeline Integrity": null, "Composite": null},
+      "category_scores": {"Lead Quality": 6.25, "Effort Quality": 5.67, "Pipeline Integrity": 6.67, "Composite": 6.2},
       "flagged_contacts": [
-        {"contact": "(process flag)", "reason": "Zero HOD meeting notes in the 7-day window — despite 21 tasks of real activity"}
+        {"contact": "Samir", "reason": "'Struggling to get a hold of' over multiple sessions — needs a forcing function"},
+        {"contact": "TJI", "reason": "Busy launching RE project, unresponsive — exit-or-park decision needed"},
+        {"contact": "IM proposal rejected (this week)", "reason": "Rejection logged but notes don't surface which contact / why — root-cause analysis missing"}
       ],
       "crm_divergence": [
-        {"note": "Activity telemetry is strong; absence of narrative stream means the story behind the numbers is invisible to the HOD."}
+        {"note": "Mumbai institutional contacts discussed but not yet in CRM — narrative running slightly ahead of Prop Force entries."},
+        {"note": "IM proposal rejection should surface a CRM reason-code; notes didn't narrate it."}
       ]
     },
     {
       "name": "Karan Sehgal",
       "id": 777623,
-      "notes_count": 0,
+      "notes_count": 4,
       "tasks_count": 2,
       "crm_inquiries": 9,
-      "has_notes": false,
+      "has_notes": true,
       "scores": {
-        "1":  {"score": null, "reasoning": "No morning-meeting notes in the 7-day window."},
-        "2":  {"score": null, "reasoning": "No HOD updates."},
-        "3":  {"score": null, "reasoning": "No narrative."},
-        "4":  {"score": null, "reasoning": "No contact descriptions."},
-        "5":  {"score": null, "reasoning": "No next-step language."},
-        "6":  {"score": null, "reasoning": "No deal-match narrative."},
-        "7":  {"score": null, "reasoning": "HOD interaction not logged."},
-        "8":  {"score": 4, "reasoning": "CRM: only 9 inquiries. Very small pipeline base. Untestable vs narrative."},
-        "9":  {"score": 4, "reasoning": "9-inquiry pipeline — nearly nothing to manage, and no written evidence of what's happening."},
-        "10": {"score": 2, "reasoning": "Only 2 tasks in 7 days (1 follow-up call + 1 client call). Effectively no conversion motion in the window."}
+        "1":  {"score": 6, "reasoning": "Named contacts with institutional context: Sanjay Kana (legacy developer, co-founded Lutans — Karan's ex-employer real-estate portfolio firm in Delhi), Pankaj Sadva (qualified lawyer, owner of Unified Credit Solutions — bank-lending due diligence for mid/large Indian corporates), Rajana (likely Adventum Global strategic partner advisor — Karan's prior affiliation), Rizwan (visit 30th April), Gurish, Ro Jen, Gara, Punkurch. Decent roster for a small active pipeline; lighter profiles on newer names."},
+        "2":  {"score": 4, "reasoning": "Sanjay Kana — strategy captured clearly ('distress or small projects that can be turned around in 2 years'). Pankaj Sadva — disinterest in KSA/Dubai explicitly documented. Gurish — 'busy with annual reviews and taxation' (soft reason, no mandate). Rizwan — visit cadence known, investment profile thin. No deployment-quantum or structure capture on any single contact this week."},
+        "3":  {"score": 4, "reasoning": "Gurish — Karan 'requested a direct connection to someone in the family office, but is still waiting for that information' — textbook gatekeeper-stuck, repeated across sessions. Pankaj Sadva — direct access but cold (disinterested). Sanjay Kana direct but social/relationship-led (ex-employer, 'very soft gentleman'). Mixed."},
+        "4":  {"score": 6, "reasoning": "Mostly investor-facing: Sanjay Kana, Pankaj Sadva, Gurish, Rizwan, Ro Jen. Rajana is used purposefully as introducer to Riyadh partner (Adventum). Family office webinar strategy (with Garima) is a network-development exercise — legitimate broadening tool, not a replacement for direct investor work."},
+        "5":  {"score": 4, "reasoning": "Vague/loose next steps: 'Attempt to schedule a call with Punkurch', 'Schedule meeting with Sanjay Kana' (no date), 'Align Scott timing with Rizwan', 'Confirm colleague name with Rajana'. Scott prompted 'need to lock in a meeting since the last call was 7-8 days prior' — signals Karan's pace is lagging. Webinar thread (04-23) has dates (May 15/16 proposed) — that thread is specific."},
+        "6":  {"score": 4, "reasoning": "No explicit deal-to-investor match rationale surfaces for any of Karan's individual contacts. The B2B/B2C webinar + physical event strategy is a good top-funnel design, but not a specific deal-to-specific-investor rationale. Pankaj Sadva correctly categorized as 'cold' (non-fit — good filtering)."},
+        "7":  {"score": 5, "reasoning": "Scott's commentary in the shared 1:1 leans into pipeline hygiene ('update pipeline dates re last contact points', 'lock in a meeting since the last call was 7-8 days prior'). Karan's webinar-strategy contribution (04-23) is the strongest strategic input — 'investors should never be exposed in a forum with other brokers due to common-client / competitive intelligence risk' is a real domain insight. Mix."},
+        "8":  {"score": 5, "reasoning": "Only 9 CRM inquiries. Pankaj Sadva correctly categorized 'cold' in narrative (matches non-engaged CRM state). Pipeline is small enough that mis-classification risk is low — but equally small enough that growth is urgent."},
+        "9":  {"score": 4, "reasoning": "Gurish — 'not spoken for over a week', direct family-office contact still waiting — approaching stale without escalation. Sanjay Kana — 'last call 7-8 days prior', Scott flagged. Ro Jen — pipeline-date update chased. Three of the small-pipeline contacts are being maintained rather than advanced."},
+        "10": {"score": 2, "reasoning": "2 tasks in 7 days — 1 follow-up call + 1 contact_client_call. Essentially no conversion motion in the window. 9-inquiry pipeline + 2-task week suggests either offboarding, heavy absence, or severe under-activity."}
       },
-      "category_scores": {"Lead Quality": null, "Effort Quality": null, "Pipeline Integrity": null, "Composite": null},
+      "category_scores": {"Lead Quality": 4.75, "Effort Quality": 4.0, "Pipeline Integrity": 4.0, "Composite": 4.3},
       "flagged_contacts": [
-        {"contact": "(process flag)", "reason": "Zero HOD meeting notes + 2 tasks total + 9-inquiry pipeline — possible absence, offboarding, or severe under-activity. Needs HOD 1:1."}
+        {"contact": "Gurish", "reason": "'Have not spoken for over a week'; requested direct family-office contact still pending — gatekeeper-stuck + approaching stale"},
+        {"contact": "Sanjay Kana", "reason": "Last call 7-8 days prior (Scott flagged) — needs date-locked meeting"},
+        {"contact": "Pankaj Sadva", "reason": "Correctly categorized 'cold' — good filtering; should not reappear in active pipeline without a new trigger"},
+        {"contact": "Rajana → Riyadh colleague", "reason": "Intro pending multiple sessions — chase for name + contact"}
       ],
-      "crm_divergence": []
+      "crm_divergence": [
+        {"note": "Pipeline only 9 inquiries — narrative mentions 7-8 distinct contacts, so CRM roughly aligns but has limited headroom."},
+        {"note": "2-task week alongside 9-inquiry CRM suggests under-work rather than misclassification."}
+      ]
     }
   ],
   "team_roll_up": {
-    "headline": "1 WM (Justin) flagged on Introducer-vs-Investor ratio (100% introducer in week's notes). 3 WMs (Alshareef, Garima, Karan) logged zero HOD meeting notes in the window.",
-    "top_performer_by_composite": "Ryan Dougan (7.4)",
-    "bottom_performer_with_notes_by_composite": "Justin James Beckwith (3.1)",
-    "process_issues": [
-      "3 of 5 WMs (Alshareef, Garima, Karan) did not log any `morning_meeting` notes in the 7-day window. Garima's task activity (21 tasks) suggests she's working but not narrating; Karan's 2-task total suggests absence or disengagement; Alshareef's 7-call-only pattern suggests heads-down prospecting without HOD communication."
+    "headline": "Clear performance spread this week: Ryan leads on deal-intelligence quality (7.9); Justin flagged on introducer-priority pattern + HOD-interaction-is-coaching dynamic (3.6); Alshareef missed a Scott 1:1 and has zero proposals shared despite good reference calls (5.4); Garima has the most balanced multi-channel motion (6.2); Karan under-active with 2 tasks + 9 inquiries (4.3).",
+    "top_performer_by_composite": "Ryan Dougan (7.9)",
+    "bottom_performer_by_composite": "Justin James Beckwith (3.6)",
+    "framework_red_flags": [
+      "Justin: 100% of self-logged relationship meetings this week (Gavin/Ala/Slavita) are introducers, not capital deployers — framework's textbook criterion-4 flag.",
+      "Justin: Scott × Justin 1:1s are dominated by pipeline hygiene, agent correction, and operational admin — criterion-7 'coaching session, not wealth manager level'.",
+      "Justin: 78/96 CRM inquiries at status=1 (raw) — a massive unworked backlog that inflates pipeline-stage claims.",
+      "Alshareef: Missed the Scott × Alshareef 1:1 on 2026-04-23 (present=0).",
+      "Karan: 2 tasks / 7 days, 9-inquiry pipeline — activity level warrants an HOD 1:1 on focus or workload.",
+      "Ryan: Qatar-cluster 'No ans, sent msg' pattern repeats across Ahmed Al Abdulla, Ali Al Abdullah (Doha Port), Mohammed Al Emadi, Abdulaziz Al Sulaiti, Jaber Al Musalam — needs de-prioritisation or alternate channel.",
+      "Garima: One IM proposal rejection logged — reason not narrated; root-cause worth surfacing."
     ]
   }
 }
